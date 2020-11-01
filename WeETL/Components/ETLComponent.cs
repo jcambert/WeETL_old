@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace WeETL
@@ -36,6 +37,7 @@ namespace WeETL
 
         protected ISubject<TInputSchema> Input => _inputSubject;
         protected ISubject<TOutputSchema> Output => _outputSubject;
+        protected ISubject<ConnectorException> Error => _onError;
         #region public methods
         public virtual bool SetInput(IObservable<TInputSchema> obs)
         {
@@ -96,6 +98,11 @@ namespace WeETL
             _outputSubject.OnCompleted();
             Console.WriteLine($"{this.GetType().Name} Completed in".PadLeft(50)+$" -> {ElapsedTime.Duration()}");
         }
+
+        protected virtual void InternalDispose()
+        {
+            _inputDisposable?.Dispose();
+        }
         #endregion
 
         #region public properties
@@ -118,6 +125,7 @@ namespace WeETL
                 if (disposing)
                 {
                     // TODO: supprimer l'état managé (objets managés)
+                    InternalDispose();
                 }
 
                 // TODO: libérer les ressources non managées (objets non managés) et substituer le finaliseur

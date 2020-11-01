@@ -36,12 +36,16 @@ namespace WeETL.ConsoleApp
             TOutputFileJson<TestSchema1, TestSchema2> jsonfile = new TOutputFileJson<TestSchema1, TestSchema2>();
             jsonfile.SetInput(rowlog.OnOutput);
             jsonfile.Transform(row => { row.TextColumn3 = row.TextColumn3 + " hacked"; });
+
+            TMap<TestSchema1, TestSchema2, TestSchema1> map = new TMap<TestSchema1, TestSchema2, TestSchema1>();
+            map.Join(TMapJoin.Left, (left, right) => left.UniqueId == right.UniqueId);
+            map.SetInput(rowgen.OnOutput);
+            map.SetLookup(rowgen.OnOutput);
+
             TLogRow<TestSchema2> rowlog2 = new TLogRow<TestSchema2>();
             rowlog2.ShowHeader(true);
             rowlog2.Mode(TLogRowMode.Basic);
-            rowlog2.SetInput(jsonfile.OnOutput);
-
-            
+            rowlog2.SetInput(map.OnOutput);
 
             await job.Start();
 
