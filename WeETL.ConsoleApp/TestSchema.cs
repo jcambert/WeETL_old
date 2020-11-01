@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WeETL.ConsoleApp
 {
-    public class TestSchema
+    public class TestSchema1
     {
         private static string PadRight(string value, int length = 10) => value?.Trim().PadRight(length) ?? "NULL".PadRight(length);
 
@@ -15,5 +15,26 @@ namespace WeETL.ConsoleApp
         public string TextColumn3 { get; set; }
 
         public override string ToString() => $" {UniqueId} | {PadRight( TextColumn1)}| {PadRight( TextColumn2)}| {PadRight(TextColumn3)}";
+    }
+    public class TestSchema2
+    {
+        private static string PadRight(string value, int length = 10) => value?.Trim().PadRight(length) ?? "NULL".PadRight(length);
+
+        public Guid UniqueId { get; set; }
+
+        public string TextColumn3 { get; set; }
+        public override string ToString() => $" {UniqueId} | {PadRight(TextColumn3)}";
+
+    }
+
+    public class TestSchema3
+    {
+        private static string PadRight(string value, int length = 10) => value?.Trim().PadRight(length) ?? "NULL".PadRight(length);
+
+        public Guid UniqueId { get; set; }
+
+        public string TextColumn4 { get; set; }
+        public override string ToString() => $" {UniqueId} | {PadRight(TextColumn4)}";
+
     }
 }

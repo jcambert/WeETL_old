@@ -7,16 +7,23 @@ using System.Threading.Tasks;
 
 namespace WeETL
 {
-    public class TOutputFileJson<TSchema> : ETLComponent<TSchema>
-        where TSchema : class, new()
+    public class TOutputFileJson<TInputSchema,TOutputSchema> : ETLComponent<TInputSchema, TOutputSchema>
+        where TInputSchema : class, new()
+        where TOutputSchema : class, new()
     {
-        List<TSchema> _buffer = new List<TSchema>();
+        List<TOutputSchema> _buffer = new List<TOutputSchema>();
         string filename = @"d:\test.json";
-        protected override void InternalOnRow(int index, TSchema row)
+        protected override void InternalOnRowBeforeTransform(int index, TInputSchema row)
         {
-            base.InternalOnRow(index, row);
-            _buffer.Add(row);
+            base.InternalOnRowBeforeTransform(index, row);
         }
+        protected override void InternalOnRowAfterTransform(int index, TOutputSchema row)
+        {
+            base.InternalOnRowAfterTransform(index, row);
+            _buffer.Add(row);
+          
+        }
+
         protected override void InternalOnCompleted()
         {
             base.InternalOnCompleted();
@@ -27,10 +34,11 @@ namespace WeETL
                 using (FileStream fs = File.Create(filename))
                 {
                     await JsonSerializer.SerializeAsync(fs, _buffer);
-                    Console.WriteLine("ENDED");
                 }
             }).Wait();
 
         }
+
+        
     }
 }

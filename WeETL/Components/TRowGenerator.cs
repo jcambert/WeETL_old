@@ -12,7 +12,7 @@ using WeETL.Exceptions;
 
 namespace WeETL
 {
-    public class TRowGenerator<TSchema> : ETLComponent<TSchema>, IStartable
+    public class TRowGenerator<TSchema> : ETLComponent<TSchema,TSchema>, IStartable
         where TSchema : class, new()
     {
         protected const string Default = "default";
