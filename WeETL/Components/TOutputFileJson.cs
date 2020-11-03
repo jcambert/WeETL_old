@@ -12,21 +12,21 @@ namespace WeETL
         where TOutputSchema : class, new()
     {
         List<TOutputSchema> _buffer = new List<TOutputSchema>();
-        string filename = @"d:\test.json";
-        protected override void InternalOnRowBeforeTransform(int index, TInputSchema row)
+        string filename = @"e:\test.json";
+        protected override void InternalOnInputBeforeTransform(int index, TInputSchema row)
         {
-            base.InternalOnRowBeforeTransform(index, row);
+            base.InternalOnInputBeforeTransform(index, row);
         }
-        protected override void InternalOnRowAfterTransform(int index, TOutputSchema row)
+        protected override void InternalOnInputAfterTransform(int index, TOutputSchema row)
         {
-            base.InternalOnRowAfterTransform(index, row);
+            base.InternalOnInputAfterTransform(index, row);
             _buffer.Add(row);
           
         }
 
-        protected override void InternalOnCompleted()
+        protected override void InternalOnInputCompleted()
         {
-            base.InternalOnCompleted();
+            base.InternalOnInputCompleted();
             //Console.WriteLine(JsonSerializer.Serialize<List<TSchema>>(_buffer));
             Task.Run(async () =>
             {

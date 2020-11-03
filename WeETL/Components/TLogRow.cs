@@ -24,9 +24,9 @@ namespace WeETL
             return this;
         }
 
-        protected override void InternalOnRowAfterTransform(int index, TSchema row)
+        protected override void InternalOnInputAfterTransform(int index, TSchema row)
         {
-            base.InternalOnRowAfterTransform(index, row);
+            base.InternalOnInputAfterTransform(index, row);
             ShowHeader();
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{index.ToString().PadRight(3)} |{row}");
@@ -39,10 +39,6 @@ namespace WeETL
             Console.Error.WriteLine(e.Message);
         }
 
-        protected override void InternalOnCompleted()
-        {
-            base.InternalOnCompleted();
-        }
 
         protected virtual void ShowHeader()
         {

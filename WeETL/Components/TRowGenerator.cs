@@ -46,6 +46,16 @@ namespace WeETL
                 Output.OnCompleted();
             });
         }
+        public virtual TSchema Generate()
+        {
+            TSchema schema = new TSchema();
+            foreach (var property in Actions.Keys)
+            {
+                var value = Actions[property].Action(this, schema);
+                schema.SetPropertyValue(property, value);
+            }
+            return schema;
+        }
         public TRowGenerator<TSchema> GeneratorFor<TProperty>(Expression<Func<TSchema, TProperty>> property, TProperty value)
         {
             var propertyName = property.GetProperty()?.Name ?? null;
@@ -77,18 +87,6 @@ namespace WeETL
             return this;
         }
 
-        protected virtual TSchema Generate(string ruleSets = null)
-        {
-
-
-
-            TSchema schema = new TSchema();
-            foreach (var property in Actions.Keys)
-            {
-                var value = Actions[property].Action(this, schema);
-                schema.SetPropertyValue(property, value);
-            }
-            return schema;
-        }
+       
     }
 }
