@@ -18,6 +18,7 @@ namespace WeETL
         public TLogRow()
         {
         }
+        public bool Enabled { get; set; } = true;
         public TLogRow<TSchema> ShowHeader(bool show)
         {
             this._showHeader = show;
@@ -27,6 +28,7 @@ namespace WeETL
         protected override void InternalOnInputAfterTransform(int index, TSchema row)
         {
             base.InternalOnInputAfterTransform(index, row);
+            if (!Enabled) return;
             ShowHeader();
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{index.ToString().PadRight(3)} |{row}");

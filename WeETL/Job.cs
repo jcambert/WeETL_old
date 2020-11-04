@@ -4,13 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WeETL
 {
     public class Job : IDisposable, IStartable
     {
+        #region private vars
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly Stopwatch watcher = new Stopwatch();
         private readonly List<IStartable> _jobs = new List<IStartable>();
         private readonly ISubject<Job> _onStart = new Subject<Job>();
@@ -18,11 +20,17 @@ namespace WeETL
         private bool disposedValue;
         private IDisposable _onStartObserver;
         private IDisposable _onCompletedObserver;
+        #endregion
+
+        #region ctor
         public Job()
         {
             _onStartObserver = OnStart.Subscribe(j => watcher.Start());
             _onCompletedObserver = OnCompleted.Subscribe(j => watcher.Stop());
         }
+        #endregion
+
+        #region public methods
         public void Add(IStartable startable)
         {
             _jobs.Add(startable);
@@ -35,15 +43,27 @@ namespace WeETL
         public async Task Start()
         {
             _onStart.OnNext(this);
-            await Task.WhenAll(_jobs.Select(j => j.Start())).ContinueWith(t => _onCompleted.OnNext(this));
+            CancellationToken token = tokenSource.Token;
+            await Task.Run(() => Task.WhenAll(_jobs.Select(j => j.Start())),token).ContinueWith(t => _onCompleted.OnNext(this));
 
         }
-        public IObservable<Job> OnStart => _onStart.AsObservable();
+        public void Stop()
+        {
+            tokenSource.Cancel();
+        }
+        #endregion
 
-        public IObservable<Job> OnCompleted => _onCompleted.AsObservable();
+        #region public properties
+        public IObservable<IStartable> OnStart => _onStart.AsObservable();
+
+        public IObservable<IStartable> OnCompleted => _onCompleted.AsObservable();
 
         public TimeSpan TimeElapsed => watcher.Elapsed.Duration();
 
+        public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
+        #endregion
+
+        #region IDisposable
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -74,5 +94,7 @@ namespace WeETL
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+        #endregion
+
     }
 }

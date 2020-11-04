@@ -20,9 +20,10 @@ namespace WeETL
         where TOutputSchema : class, new()
         where TLookupSchema : class, new()
     {
+        #region private vars
         private bool _dataCompleted, _lookupCompleted;
         private TMapJoin _join;
-        private IDisposable _lookupDisposable;
+        private IDisposable _lookupDisposable=null;
         public bool AcceptLookup => _lookupDisposable == null;
 
         private List<TInputSchema> _dataRows = new List<TInputSchema>();
@@ -31,25 +32,26 @@ namespace WeETL
         private Func<TInputSchema, TKey> _leftKey;
         private Func<TLookupSchema, TKey> _rightKey;
         private readonly ISubject<TMap<TInputSchema, TOutputSchema, TLookupSchema, TKey>> _onSetLookup = new Subject<TMap<TInputSchema, TOutputSchema, TLookupSchema, TKey>>();
+        #endregion
+        #region ctor
         public TMap()
         {
 
         }
+        #endregion
+        #region public methods
         public bool SetLookup(IObservable<TLookupSchema> lookup)
         {
-            return SetObservable<TLookupSchema, TOutputSchema>(
+            var result= SetObservable<TLookupSchema, TOutputSchema>(
                 lookup,
                 AcceptLookup,
                 $"a Lookup Schema has already been connected",
-                _lookupDisposable,
-                InternalOnLookupBeforeTransform,
-                InternalLookupTransform,
-                InternalOnLookupAfterTransform,
-                InternalSendOutput,
+                ref _lookupDisposable,
                 InternalOnException,
-                InternalOnInputCompleted,
-                _onSetLookup
+                InternalOnLookupCompleted
                 );
+            if (result)_onSetLookup.OnNext(this);
+            return result;
            /* if (!AcceptLookup)
             {
                 Error.OnNext(new ConnectorException($"a Lookup Schema has already been connected"));
@@ -67,16 +69,28 @@ namespace WeETL
         {
             this._join = join;
         }
+        public void SetMapping(Action<IMapperConfigurationExpression> config)
+        {
+            this._mapperConfig = config;
+        }
+        public void SetLeftKey(Func<TInputSchema, TKey> leftKey)
+        {
+            this._leftKey = leftKey;
+        }
+
+        public void SetRightKey(Func<TLookupSchema, TKey> rightKey)
+        {
+            this._rightKey = rightKey;
+        }
+        #endregion
+        #region protected methods
         protected override void InternalOnInputBeforeTransform(int index, TInputSchema row)
         {
             base.InternalOnInputBeforeTransform(index, row);
             _dataRows.Add(row);
         }
 
-        protected override TOutputSchema InternalTransform(TInputSchema row)
-        {
-            return base.InternalTransform(row);
-        }
+
         protected virtual void InternalOnLookupCompleted()
         {
             _lookupCompleted = true;
@@ -100,6 +114,14 @@ namespace WeETL
             Mapper = config.CreateMapper();
 
         }
+        protected override void InternalDispose()
+        {
+            base.InternalDispose();
+            _lookupDisposable?.Dispose();
+        }
+
+        #endregion
+        #region private methods
         private void PerformJoin()
         {
             if (!_dataCompleted || !_lookupCompleted) return;
@@ -125,22 +147,12 @@ namespace WeETL
                 Error.OnNext(new ConnectorException("An error occure while Performing Mapping", e));
             }
         }
-        public void SetLeftKey(Func<TInputSchema, TKey> leftKey)
-        {
-            this._leftKey = leftKey;
-        }
+        #endregion
         protected  TKey GetLeftKey(TInputSchema d)=>this._leftKey!=null? this._leftKey.Invoke(d) :  d.GetPropertyKeyValue<TInputSchema, TKey>();
         
-        public void SetRightKey(Func<TLookupSchema, TKey> rightKey)
-        {
-            this._rightKey = rightKey;
-        }
         protected TKey GetRightKey(TLookupSchema d)=>this._rightKey!=null? this._rightKey.Invoke(d) : d.GetPropertyKeyValue<TLookupSchema, TKey>();
         
 
-        public void SetMapping(Action<IMapperConfigurationExpression> config)
-        {
-            this._mapperConfig = config;
-        }
+       
     }
 }

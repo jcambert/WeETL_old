@@ -12,10 +12,10 @@ using System.Text;
 namespace WeETL
 {
     public abstract class ETLComponent<TInputSchema, TOutputSchema> : IDisposable
-        where TInputSchema : class, new()
+        where TInputSchema : class//, new()
         where TOutputSchema : class, new()
     {
-        #region private 
+        #region private vars
 
         private int _outputCounter;
         private bool disposedValue;
@@ -46,19 +46,21 @@ namespace WeETL
         #region public methods
         public virtual bool SetInput(IObservable<TInputSchema> obs)
         {
-            return SetObservable<TInputSchema, TOutputSchema>(
+            var result= SetObservable<TInputSchema, TOutputSchema>(
                 obs,
                 AcceptInput,
                 $"{this.GetType().Name} is Startable. It does not accept input",
-                _inputDisposable,
-                InternalOnInputBeforeTransform,
-                InternalTransform,
-                InternalOnInputAfterTransform,
-                InternalSendOutput,
+                ref _inputDisposable,
                 InternalOnException,
                 InternalOnInputCompleted,
-                _onSetInput
+                InternalOnInputBeforeTransform,
+                InternalInputTransform,
+                InternalOnInputAfterTransform,
+                InternalSendOutput
                 );
+            if (result) _onSetInput.OnNext(this);
+            return result;
+
             /*if (!AcceptInput)
             {
                 _onError.OnNext(new ConnectorException($"{this.GetType().Name} is Startable. It does not accept input"));
@@ -83,14 +85,16 @@ namespace WeETL
             IObservable<TIn> obs,
             bool accept,
             string acceptErrorMessage,
-            IDisposable disposable,
-            Action<int,TIn> beforeTransform,
-            Func<TIn,TOut> transform,
-            Action<int,TOut> afterTransform,
-            Action<TOut> sendOutput,
+            ref IDisposable disposable,
             Action<Exception> exception,
             Action completed,
-            ISubject<ETLComponent<TInputSchema,TOutputSchema>> set)
+            Action<int,TIn> beforeTransform=null,
+            Func<TIn,TOut> transform=null,
+            Action<int,TOut> afterTransform=null,
+            Action<TOut> sendOutput=null)
+             where TIn: class//, new() 
+            where TOut : class, new()
+
         {
             if (!accept)
             {
@@ -102,14 +106,17 @@ namespace WeETL
                row =>
                {
                    if (!_timeWatcher.IsRunning) _timeWatcher.Start();
-                   beforeTransform(_outputCounter++, row.Value);
-                   var transformed = transform(row.Value);
-                   afterTransform(_outputCounter, transformed);
-                   sendOutput(transformed);
+                   if (beforeTransform != null && transform != null && afterTransform != null && sendOutput != null)
+                   {
+                       beforeTransform(_outputCounter++, row.Value);
+                       var transformed = transform(row.Value);
+                       afterTransform(_outputCounter, transformed);
+                       sendOutput(transformed);
+                   }
                },
                exception,
                completed);
-            set.OnNext(this);
+            //set.OnNext(this);
             return true;
         }
         public void Transform(Action<TOutputSchema> p)
@@ -132,7 +139,7 @@ namespace WeETL
         {
 
         }
-        protected virtual TOutputSchema InternalTransform(TInputSchema row)
+        protected virtual TOutputSchema InternalInputTransform(TInputSchema row)
         {
             Contract.Requires(Mapper != null, "You must create Automapper configuration before using Transforming Schema");
             var result = Mapper.Map<TOutputSchema>(row);

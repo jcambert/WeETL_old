@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using WeETL.Components;
 
 namespace WeETL.ConsoleApp
 {
@@ -21,6 +22,7 @@ namespace WeETL.ConsoleApp
         }
 
         static async Task TestJob() {
+            string jsonFileName= @"d:\test.json";
             Job job = new Job();
             job.OnCompleted.Subscribe(job => {
                 Console.WriteLine($"Elapsed Time:{job.TimeElapsed.TotalSeconds}");
@@ -39,22 +41,36 @@ namespace WeETL.ConsoleApp
             .GeneratorFor(e => e.TextColumn1, ETLString.GetToto)
             .GeneratorFor(e => e.TextColumn2, e => ETLString.GetAsciiRandomString(8, StringRandomStyle.UpperCase))
             .GeneratorFor(e => e.TextColumn3, row => ETLString.GetIntRandom(1, 100).ToString())
+
             .AddToJob(job);
             
             TRowGenerator<TestSchema2> lookupgen = new TRowGenerator<TestSchema2>();
             lookupgen
              .Strict(true)
             .GeneratorFor(e => e.UniqueId, e => Guid.NewGuid())
+            .GeneratorFor(e => e.TextColumn3, row => ETLString.GetIntRandom(1, 100).ToString())
             .GeneratorFor(r => r.TextColumn4, ETLString.GetToto)
             .AddToJob(job);
 
             TLogRow<TestSchema1> rowlog = new TLogRow<TestSchema1>();
             rowlog.ShowHeader(true);
             rowlog.SetInput(rowgen.OnOutput);
+            rowlog.Enabled = false;
 
             TOutputFileJson<TestSchema1, TestSchema2> jsonfile = new TOutputFileJson<TestSchema1, TestSchema2>();
+            jsonfile.Filename = jsonFileName;
+            jsonfile.DeleteFileIfExist = true;
             jsonfile.SetInput(rowlog.OnOutput);
-            jsonfile.Transform(row => { row.TextColumn4 = row.TextColumn4 + " hacked"; });
+            
+            jsonfile.Transform(row => { row.TextColumn4 = row.TextColumn3 + " hacked"; });
+            jsonfile.OnError.Subscribe(ex =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Error.Write("OUPUT JSON".PadLeft(10, '#').PadRight(10, '#'));
+                Console.Error.WriteLine(ex.Message);
+                Console.Error.WriteLine(ex.InnerException.Message);
+                Console.ResetColor();
+            });
 
             TMap<TestSchema1, TestSchema3, TestSchema2,Guid> map = new TMap<TestSchema1, TestSchema3, TestSchema2,Guid>();
             map.Join(TMapJoin.LeftOuter);
@@ -67,12 +83,42 @@ namespace WeETL.ConsoleApp
                 .ForAllOtherMembers(m => m.Ignore());
             }
             );
-           
+            map.OnError.Subscribe(ex =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Error.WriteLine(ex.Message);
+                Console.ResetColor();
+            });
             TLogRow<TestSchema3> rowlog2 = new TLogRow<TestSchema3>();
             rowlog2.ShowHeader(true);
             rowlog2.Mode(TLogRowMode.Basic);
             rowlog2.SetInput(map.OnOutput);
+            rowlog2.Enabled = false;
 
+
+            TInputFileJson<TestSchema2, TestSchema2> inputJson = new TInputFileJson<TestSchema2, TestSchema2>();
+            inputJson.Filename = jsonFileName;
+            inputJson.AddToJob(job);
+            inputJson.OnError.Subscribe(ex =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Error.Write("INPUT JSON".PadLeft(10,'#').PadRight(10,'#'));
+                Console.Error.WriteLine(ex.Message);
+                Console.Error.WriteLine(ex.InnerException.Message);
+                Console.ResetColor();
+            });
+
+            TLogRow<TestSchema2> logInputJson = new TLogRow<TestSchema2>();
+            logInputJson.SetInput(inputJson.OnOutput);
+            logInputJson.Enabled = true;
+
+
+            TWaitForFile waitForFile = new TWaitForFile();
+            waitForFile.Path = @"d:\";
+            waitForFile.Filter = "test.json";
+            waitForFile.Deleted.Subscribe(f => Console.WriteLine($"{f.EventArgs.FullPath} has been deleted"));
+            waitForFile.AddToJob(job);
+            
             await job.Start();
 
             job.Dispose();

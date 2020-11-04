@@ -23,6 +23,7 @@ namespace WeETL.ConsoleApp
         [Key]
         public Guid UniqueId { get; set; }
 
+        public string TextColumn3 { get; set; }
         public string TextColumn4 { get; set; }
         public override string ToString() => $" {UniqueId} | {PadRight(TextColumn4)}";
 

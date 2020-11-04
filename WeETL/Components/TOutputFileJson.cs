@@ -12,7 +12,10 @@ namespace WeETL
         where TOutputSchema : class, new()
     {
         List<TOutputSchema> _buffer = new List<TOutputSchema>();
-        string filename = @"e:\test.json";
+
+        public string Filename { get; set; }
+        public bool DeleteFileIfExist { get; set; } = true;
+
         protected override void InternalOnInputBeforeTransform(int index, TInputSchema row)
         {
             base.InternalOnInputBeforeTransform(index, row);
@@ -27,13 +30,19 @@ namespace WeETL
         protected override void InternalOnInputCompleted()
         {
             base.InternalOnInputCompleted();
-            //Console.WriteLine(JsonSerializer.Serialize<List<TSchema>>(_buffer));
             Task.Run(async () =>
             {
-
-                using (FileStream fs = File.Create(filename))
+                try
                 {
-                    await JsonSerializer.SerializeAsync(fs, _buffer);
+                    if(DeleteFileIfExist)
+                        File.Delete(Filename);
+                    using (FileStream fs = File.Create(Filename))
+                    {
+                        await JsonSerializer.SerializeAsync(fs, _buffer);
+                    }
+                }catch(Exception e)
+                {
+                    Error.OnNext(new ConnectorException( "An error occurs while reading json file. See InnerException", e));
                 }
             }).Wait();
 
