@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using WeETL.Core;
 
 namespace WeETL
 {
@@ -16,10 +17,7 @@ namespace WeETL
         public string Filename { get; set; }
         public bool DeleteFileIfExist { get; set; } = true;
 
-        protected override void InternalOnInputBeforeTransform(int index, TInputSchema row)
-        {
-            base.InternalOnInputBeforeTransform(index, row);
-        }
+
         protected override void InternalOnInputAfterTransform(int index, TOutputSchema row)
         {
             base.InternalOnInputAfterTransform(index, row);
@@ -42,7 +40,7 @@ namespace WeETL
                     }
                 }catch(Exception e)
                 {
-                    Error.OnNext(new ConnectorException( "An error occurs while reading json file. See InnerException", e));
+                    ErrorHandler.OnNext(new ConnectorException( "An error occurs while reading json file. See InnerException", e));
                 }
             }).Wait();
 

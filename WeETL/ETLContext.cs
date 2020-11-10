@@ -1,61 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Text;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics.Contracts;
 
 namespace WeETL
 {
-    public sealed class ETLContext:DynamicObject
+    public class ETLContext
     {
-        Dictionary<string, object> dictionary= new Dictionary<string, object>();
-
-        public static dynamic Create()
+        private readonly IServiceCollection _serviceCollection = new ServiceCollection();
+        private ServiceProvider _serviceProvider;
+        private bool _isConfigured = false;
+        public ETLContext()
         {
-            var ctx = new ETLContext();
-            return ctx;
         }
-
-        private ETLContext()
+        public ETLContext ConfigureService(Action<IServiceCollection> cfg=null)
         {
-
+            if (_isConfigured) return this;
+            cfg?.Invoke(_serviceCollection);
+            _serviceCollection
+                .AddLogging(cfg => { cfg.AddConsole();cfg.AddDebug(); })
+                .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Information)
+                .AddTransient<Job>()
+                .AddTransient(typeof(TLogRow<>))
+                .AddSingleton(this)
+                ;
+            _isConfigured = true;
+            return this;
         }
-        // This property returns the number of elements
-        // in the inner dictionary.
-        public int Count
+        public void Build()
+        {
+            if (!_isConfigured) ConfigureService();
+            _serviceProvider = _serviceCollection.BuildServiceProvider();
+        }
+        public dynamic Global { get; private set; } = ETLGlobal.Create();
+        public ServiceProvider Provider
         {
             get
             {
-                return dictionary.Count;
+                Contract.Ensures(Contract.ValueAtReturn(out _serviceProvider) != null, "An error append on Building DI.Check your code");
+                if (_serviceProvider == null) Build();
+                return _serviceProvider;
             }
         }
-
-        // If you try to get a value of a property
-        // not defined in the class, this method is called.
-        public override bool TryGetMember(
-            GetMemberBinder binder, out object result)
-        {
-            // Converting the property name to lowercase
-            // so that property names become case-insensitive.
-            string name = binder.Name.ToLower();
-
-            // If the property name is found in a dictionary,
-            // set the result parameter to the property value and return true.
-            // Otherwise, return false.
-            return dictionary.TryGetValue(name, out result);
+        public T GetService<T>() {
+            Contract.Ensures(Contract.Result<T>() != null, $"The service {nameof(T)} has not been registered.Check your configuration");
+           
+            Contract.EndContractBlock();
+            return Provider.GetService<T>(); 
         }
+        public Job CreateJob() => GetService<Job>();
 
-        // If you try to set a value of a property that is
-        // not defined in the class, this method is called.
-        public override bool TrySetMember(
-            SetMemberBinder binder, object value)
-        {
-            // Converting the property name to lowercase
-            // so that property names become case-insensitive.
-            dictionary[binder.Name.ToLower()] = value;
-
-            // You can always add a value to a dictionary,
-            // so this method always returns true.
-            return true;
-        }
     }
 }

@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.FlowAnalysis;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
+using WeETL.Core;
 
 namespace WeETL
 {
@@ -101,7 +98,7 @@ namespace WeETL
             _dataCompleted = true;
             PerformJoin();
         }
-        protected override void InternalSendOutput(TOutputSchema row)
+        protected override void InternalSendOutput(int index,TOutputSchema row)
         {
             //DO NOTHING UNLESS ALL DATAS ARE IN MEMORY
             //AND THE JOIN FUNCTION HAS BEEN DONE
@@ -136,15 +133,15 @@ namespace WeETL
                 };
                 foreach (var item in joinedRows)
                 {
-                    Output.OnNext(Mapper.Map<TOutputSchema>(item.l, item.r));
+                    OutputHandler.OnNext(Mapper.Map<TOutputSchema>(item.l, item.r));
                 }
-                Output.OnCompleted();
+                OutputHandler.OnCompleted();
 
             }
 
             catch (Exception e)
             {
-                Error.OnNext(new ConnectorException("An error occure while Performing Mapping", e));
+                ErrorHandler.OnNext(new ConnectorException("An error occure while Performing Mapping", e));
             }
         }
         #endregion

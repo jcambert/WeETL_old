@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-
+using WeETL.Core;
 namespace WeETL
 {
     public class Job : IDisposable, IStartable
@@ -23,8 +24,12 @@ namespace WeETL
         #endregion
 
         #region ctor
-        public Job()
+        /// <summary>
+        /// Force to use ETLContext
+        /// </summary>
+        public Job(ETLContext ctx)
         {
+            Contract.Requires(ctx != null, "ETLContext cannot be null. Use the DI");
             _onStartObserver = OnStart.Subscribe(j => watcher.Start());
             _onCompletedObserver = OnCompleted.Subscribe(j => watcher.Stop());
         }
@@ -39,6 +44,11 @@ namespace WeETL
         public void AddRange(IEnumerable<IStartable> jobs)
         {
             _jobs.AddRange(jobs);
+        }
+
+        public void Remove(IStartable startable)
+        {
+            _jobs.Remove(startable);
         }
         public async Task Start()
         {

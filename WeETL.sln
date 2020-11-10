@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30524.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeETL", "WeETL\WeETL.csproj", "{64D6C729-51DD-47CB-9EE9-A556DB7843A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL", "WeETL\WeETL.csproj", "{64D6C729-51DD-47CB-9EE9-A556DB7843A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeETL.ConsoleApp", "WeETL.ConsoleApp\WeETL.ConsoleApp.csproj", "{3BD1930C-412C-4D7B-98E9-94852C887A8D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.ConsoleApp", "WeETL.ConsoleApp\WeETL.ConsoleApp.csproj", "{3BD1930C-412C-4D7B-98E9-94852C887A8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeETL.Tests", "WeETL.Tests\WeETL.Tests.csproj", "{58BB7F34-30D6-48AC-8DAE-90E570C34979}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{3BD1930C-412C-4D7B-98E9-94852C887A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BD1930C-412C-4D7B-98E9-94852C887A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BD1930C-412C-4D7B-98E9-94852C887A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

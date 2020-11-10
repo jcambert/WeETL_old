@@ -7,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using WeETL.Core;
 
 namespace WeETL
 {
@@ -17,27 +18,27 @@ namespace WeETL
         private List<TInputSchema> inputs;
 
 
-        public TInputFileJson():base()
+        public TInputFileJson() : base()
         {
-          
-        }
-     
-        protected override void InternalStart()
-        {
-            
-                    var jsonString = File.ReadAllText(Filename);
-                    inputs = JsonSerializer.Deserialize<List<TInputSchema>>(jsonString);
-                    foreach (var row in inputs)
-                    {
-                        
-                            var transformed = InternalInputTransform(row);
-                            InternalSendOutput(transformed);
-                        
-                    }
-                
-        }
-        
 
-        public string  Filename { get; set; }
+        }
+
+        protected override Task InternalStart()
+        {
+            int counter = 0;
+            var jsonString = File.ReadAllText(Filename);
+            inputs = JsonSerializer.Deserialize<List<TInputSchema>>(jsonString);
+            foreach (var row in inputs)
+            {
+
+                var transformed = InternalInputTransform(row);
+                InternalSendOutput(counter++,transformed);
+
+            }
+            return Task.CompletedTask;
+        }
+
+
+        public string Filename { get; set; }
     }
 }

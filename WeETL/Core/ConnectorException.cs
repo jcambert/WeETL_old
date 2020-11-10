@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace WeETL
+namespace WeETL.Core
 {
     public sealed class ConnectorException : Exception
     {

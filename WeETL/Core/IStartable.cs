@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace WeETL
+namespace WeETL.Core
 {
     public interface IStartable
     {
@@ -9,9 +9,7 @@ namespace WeETL
 
         void Stop();
 
-        IObservable<IStartable> OnStart { get; }
-
-        IObservable<IStartable> OnCompleted { get; }
+        
 
         TimeSpan TimeElapsed { get; }
 

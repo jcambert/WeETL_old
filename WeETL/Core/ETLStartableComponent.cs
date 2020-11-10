@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WeETL
+namespace WeETL.Core
 {
     public abstract class ETLStartableComponent<TInputSchema, TOutputSchema> : ETLComponent<TInputSchema, TOutputSchema>, IStartable
           where TInputSchema : class//, new()
@@ -13,8 +13,8 @@ namespace WeETL
     {
         #region private vars
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
-        private readonly ISubject<ETLStartableComponent<TInputSchema, TOutputSchema>> _onStart = new Subject<ETLStartableComponent<TInputSchema, TOutputSchema>>();
-        private readonly ISubject<ETLStartableComponent<TInputSchema, TOutputSchema>> _onCompleted = new Subject<ETLStartableComponent<TInputSchema, TOutputSchema>>();
+       // private readonly ISubject<IStartable> _onStart = new Subject<IStartable>();
+        //private readonly ISubject<IStartable> _onCompleted = new Subject<IStartable>();
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _onStartObserver;
         private readonly IDisposable _onCompletedObserver;
@@ -29,9 +29,7 @@ namespace WeETL
         #endregion
 
         #region public properties
-        public IObservable<IStartable> OnStart => _onStart.AsObservable();
-
-        public IObservable<IStartable> OnCompleted => _onCompleted.AsObservable();
+        
 
         public TimeSpan TimeElapsed => _timeWatcher.Elapsed.Duration();
 
@@ -42,17 +40,27 @@ namespace WeETL
 
         public Task Start()
         {
-            CancellationToken token = tokenSource.Token;
-            var task = Task.Run(() =>
+            if (!Enabled)
             {
-                _onStart.OnNext(this);
+                OutputHandler.OnCompleted();
+                return Task.CompletedTask;
+            }
+            CancellationToken token = tokenSource.Token;
+            var task = Task.Run(async () =>
+            {
+                StartHandler.OnNext(this);
                 token.ThrowIfCancellationRequested();
                 try
                 {
                     if (!token.IsCancellationRequested)
                     {
-                        InternalStart();
-                        Output.OnCompleted();
+                        await InternalStart();
+                        
+                        OutputHandler.OnCompleted();
+                    }
+                    else
+                    {
+
                     }
                 }
                 catch (OperationCanceledException)
@@ -61,9 +69,9 @@ namespace WeETL
                 }
                 catch (Exception e)
                 {
-                    Error.OnNext(new ConnectorException("An error occurs while reading json file. See Inner Exception", e));
+                    ErrorHandler.OnNext(new ConnectorException($"An error occurs while processing {this.GetType().Name}. See Inner Exception", e));
                 }
-            }, token).ContinueWith(t => _onCompleted.OnNext(this));
+            }, token).ContinueWith(t => CompleteHandler.OnNext(this));
             return task;
         }
 
@@ -74,7 +82,7 @@ namespace WeETL
         #endregion
 
         #region protected methods
-        protected abstract void InternalStart();
+        protected abstract Task InternalStart();
 
         protected override void InternalDispose()
         {
