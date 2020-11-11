@@ -1,53 +1,56 @@
 ﻿using AutoMapper;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 
 namespace WeETL.Core
 {
-    public abstract class ETLComponent<TInputSchema, TOutputSchema> : ETLCoreComponent, IETLWatchableComponent<ETLComponent<TInputSchema, TOutputSchema>>, IDisposable
+    public abstract class ETLComponent<TInputSchema, TOutputSchema> : ETLCoreComponent
         where TInputSchema : class//, new()
         where TOutputSchema : class, new()
     {
         #region private vars
 
         private int _outputCounter;
-        private bool disposedValue;
-        private IDisposable _inputDisposable = null;
+        private IDisposable _inputDisposable;
         private Action<TOutputSchema> _transform;
+        private IMapper _mapper;
+        private Action<IMappingExpression<TInputSchema, TOutputSchema>> _mappercfg;
         private readonly ISubject<ConnectorException> _onError = new Subject<ConnectorException>();
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onSetInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onRemoveInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<TInputSchema> _inputSubject = new Subject<TInputSchema>();
         private readonly ISubject<TOutputSchema> _outputSubject = new Subject<TOutputSchema>();
-        private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onStart = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
+        private readonly ISubject<(ETLComponent<TInputSchema, TOutputSchema>, DateTime)> _onStart = new Subject<(ETLComponent<TInputSchema, TOutputSchema>, DateTime)>();
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onCompleted = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
-        private readonly Stopwatch _timeWatcher = new Stopwatch();
+
         #endregion
         #region ctor
-        public ETLComponent()
+        public ETLComponent() : base()
         {
-            CreateMapper();
 
         }
         #endregion
         protected bool DeferSendingOutput { get; set; }
-        public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnStart => _onStart.AsObservable();
 
-        public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnCompleted => _onCompleted.AsObservable();
-        protected ISubject<ETLComponent<TInputSchema, TOutputSchema>> StartHandler => _onStart;
-        protected ISubject<ETLComponent<TInputSchema, TOutputSchema>> CompleteHandler => _onCompleted;
         protected ISubject<TInputSchema> InputHandler => _inputSubject;
         protected ISubject<TOutputSchema> OutputHandler => _outputSubject;
         protected ISubject<ConnectorException> ErrorHandler => _onError;
-        protected IMapper Mapper { get; set; }
+        protected IMapper Mapper
+        {
+            get
+            {
+                if (_mapper == null)
+                    CreateMapper();
+                return _mapper;
+            }
+            set
+            {
+                //Enable override Mapper
+                _mapper = value;
+            }
+        }
         #region public methods
         public virtual bool SetInput(IObservable<TInputSchema> obs)
         {
@@ -93,11 +96,9 @@ namespace WeETL.Core
             disposable = obs.TimeInterval().Subscribe(
                row =>
                {
-                   if (!_timeWatcher.IsRunning)
+                   if (!IsRunning)
                    {
-                       StartTime = DateTime.Now;
-                       _timeWatcher.Start();
-                       _onStart.OnNext(this);
+                       StartHandler.OnNext((this, DateTime.Now));
                    }
                    if ((Enabled || !Passthrue) && beforeTransform != null && transform != null && afterTransform != null && sendOutput != null)
                    {
@@ -115,16 +116,34 @@ namespace WeETL.Core
             //set.OnNext(this);
             return true;
         }
-        public void Transform(Action<TOutputSchema> p)
+        /// <summary>
+        /// Transform the output schema row/property by your one
+        /// </summary>
+        /// <param name="@action">The action that perform the transformation</param>
+        public void Transform(Action<TOutputSchema> @action)
         {
-            this._transform = p;
+            this._transform = action;
         }
         #endregion
 
         #region protected methods
+        /*   public void SetMapperConfiguration(Action<IMapperConfigurationExpression> cfg)
+           {
+               this._mapperConfiguration = cfg;
+           }*/
+        public void MapperConfiguation(Action<IMappingExpression<TInputSchema, TOutputSchema>> fn)
+        {
+            this._mappercfg = fn;
+
+        }
         protected virtual void CreateMapper()
         {
-            var config = new MapperConfiguration(cfg => cfg.CreateMap<TInputSchema, TOutputSchema>());
+            var config = new MapperConfiguration(cfg =>
+            {
+                var s = cfg.CreateMap<TInputSchema, TOutputSchema>();
+                _mappercfg?.Invoke(s);
+            });
+            //var config = _mapperConfiguration == null?new MapperConfiguration(cfg => cfg.CreateMap<TInputSchema, TOutputSchema>()):new MapperConfiguration(_mapperConfiguration);
             Mapper = config.CreateMapper();
         }
         protected virtual void InternalSendOutput(int index, TOutputSchema row)
@@ -162,17 +181,12 @@ namespace WeETL.Core
 
         protected virtual void InternalOnInputCompleted()
         {
-            _timeWatcher.Stop();
-            ElapsedTime = _timeWatcher.Elapsed;
             _outputSubject.OnCompleted();
             _onCompleted.OnNext(this);
 
         }
 
-        protected virtual void InternalDispose()
-        {
-            _inputDisposable?.Dispose();
-        }
+
         #endregion
 
         #region public properties
@@ -181,42 +195,16 @@ namespace WeETL.Core
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnSetInput => _onSetInput.AsObservable();
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnRemoveInput => _onRemoveInput.AsObservable();
         public IObservable<TOutputSchema> OnOutput => OutputHandler.AsObservable();
-        public TimeSpan ElapsedTime { get; private set; }
-        public DateTime StartTime { get; private set; }
         #endregion
 
 
         #region IDisposable
-
-        protected virtual void Dispose(bool disposing)
+        protected override void InternalDispose()
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: supprimer l'état managé (objets managés)
-                    InternalDispose();
-                }
-
-                // TODO: libérer les ressources non managées (objets non managés) et substituer le finaliseur
-                // TODO: affecter aux grands champs une valeur null
-                disposedValue = true;
-            }
+            base.InternalDispose();
+            _inputDisposable?.Dispose();
         }
-
-        // // TODO: substituer le finaliseur uniquement si 'Dispose(bool disposing)' a du code pour libérer les ressources non managées
-        // ~ETLComponent()
-        // {
-        //     // Ne changez pas ce code. Placez le code de nettoyage dans la méthode 'Dispose(bool disposing)'
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Ne changez pas ce code. Placez le code de nettoyage dans la méthode 'Dispose(bool disposing)'
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+        
         #endregion
     }
 

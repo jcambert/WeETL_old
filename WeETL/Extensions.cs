@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.Internal;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,6 +13,8 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using WeETL.Core;
+using WeETL.Schemas;
+
 namespace WeETL
 {
     public static class Extensions
@@ -24,6 +30,25 @@ namespace WeETL
             Contract.Requires(cmp != null, "Startable cannot be null in order to add to job");
             Contract.Requires(job != null, "Job cannot be null in order to add a Startable");
             job.Remove(cmp);
+        }
+        internal static void LoadDefaultComponents(this IServiceCollection service)
+        {
+            var types = typeof(ETLContext).Assembly.GetTypes().Where(t =>!t.IsAbstract && t.IsPublic && typeof(IETLCoreComponent).IsAssignableFrom(t) /* && t.IsTypeof< ETLComponent <NoneSchema,NoneSchema> > ( )*/);
+            foreach (var type in types)
+            {
+               // Debug.WriteLine(type.Name);
+                service.TryAddTransient(@type);
+            }
+        }
+        internal static bool IsTypeof<T>(this object t)
+        {
+            return (t is T);
+        }
+        public static string PadBoth(this string str, int length)
+        {
+            int spaces = length - str.Length;
+            int padLeft = spaces / 2 + str.Length;
+            return str.PadLeft(padLeft).PadRight(length);
         }
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source)=>
             source.Select((item, index) => (item, index));
@@ -53,6 +78,15 @@ namespace WeETL
 
         {
             typeof(T).GetProperty(propertyName)?.GetSetMethod()?.Invoke(target, new[] { (object)value });
+        }
+        public static void SetPropertyValueAndNotify<T, TValue>(this T target, Expression<Func<T, TValue>> property, ref TValue current, TValue @new, IObserver<string> handler)
+        {
+            if (!current.Equals(@new))
+            {
+                current = @new;
+                handler?.OnNext(property.GetPropertyName());
+            }
+
         }
 
         public static void SetPropertyValueAndNotify<T, TValue>(this T target, Expression<Func<T, TValue>> property, ref TValue current, TValue @new, PropertyChangedEventHandler handler)

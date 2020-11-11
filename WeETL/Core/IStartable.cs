@@ -9,9 +9,6 @@ namespace WeETL.Core
 
         void Stop();
 
-        
-
-        TimeSpan TimeElapsed { get; }
 
         bool IsCancellationRequested { get; }
     }

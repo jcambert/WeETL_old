@@ -48,7 +48,8 @@ namespace WeETL.Core
             CancellationToken token = tokenSource.Token;
             var task = Task.Run(async () =>
             {
-                StartHandler.OnNext(this);
+                
+                StartHandler.OnNext((this,DateTime.Now));
                 token.ThrowIfCancellationRequested();
                 try
                 {
@@ -71,7 +72,7 @@ namespace WeETL.Core
                 {
                     ErrorHandler.OnNext(new ConnectorException($"An error occurs while processing {this.GetType().Name}. See Inner Exception", e));
                 }
-            }, token).ContinueWith(t => CompleteHandler.OnNext(this));
+            }, token).ContinueWith(t => CompletedHandler.OnNext((this,DateTime.Now)));
             return task;
         }
 

@@ -1,7 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Text.RegularExpressions;
+using WeETL.Core;
 
 namespace WeETL
 {
@@ -10,8 +15,12 @@ namespace WeETL
         private readonly IServiceCollection _serviceCollection = new ServiceCollection();
         private ServiceProvider _serviceProvider;
         private bool _isConfigured = false;
-        public ETLContext()
+        private readonly bool _loadDefaultComponents;
+        private readonly ISubject<ETLContext> _onLoaded = new Subject<ETLContext>();
+        private readonly Dictionary<Type, int> _serviceCounter = new Dictionary<Type, int>();
+        public ETLContext(bool loadDefaultComponents=true)
         {
+            this._loadDefaultComponents = loadDefaultComponents;
         }
         public ETLContext ConfigureService(Action<IServiceCollection> cfg=null)
         {
@@ -21,9 +30,11 @@ namespace WeETL
                 .AddLogging(cfg => { cfg.AddConsole();cfg.AddDebug(); })
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Information)
                 .AddTransient<Job>()
-                .AddTransient(typeof(TLogRow<>))
+                //.AddTransient(typeof(TLogRow<>))
                 .AddSingleton(this)
                 ;
+            if (_loadDefaultComponents)
+                _serviceCollection.LoadDefaultComponents();
             _isConfigured = true;
             return this;
         }
@@ -31,7 +42,9 @@ namespace WeETL
         {
             if (!_isConfigured) ConfigureService();
             _serviceProvider = _serviceCollection.BuildServiceProvider();
+            _onLoaded.OnNext(this);
         }
+        public IObservable<ETLContext> OnLoaded => _onLoaded.AsObservable();
         public dynamic Global { get; private set; } = ETLGlobal.Create();
         public ServiceProvider Provider
         {
@@ -46,7 +59,19 @@ namespace WeETL
             Contract.Ensures(Contract.Result<T>() != null, $"The service {nameof(T)} has not been registered.Check your configuration");
            
             Contract.EndContractBlock();
-            return Provider.GetService<T>(); 
+            T service= Provider.GetService<T>();
+            if (service.IsTypeof<ETLCoreComponent>())
+            {
+                ETLCoreComponent cmp = service as ETLCoreComponent;
+                if (!_serviceCounter.ContainsKey(typeof(T)))
+                    _serviceCounter[typeof(T)] = 1;
+                else
+                    _serviceCounter[typeof(T)]++;
+                var name = Regex.Replace(typeof(T).Name, "`[0-9]*", "");
+                cmp.Name = $"{name}-{ _serviceCounter[typeof(T)]}";
+
+            }
+            return service;
         }
         public Job CreateJob() => GetService<Job>();
 

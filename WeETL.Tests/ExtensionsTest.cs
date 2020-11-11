@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
+using System.Reactive.Linq;
 using WeETL.Core;
 
 namespace WeETL.Tests
@@ -22,8 +23,8 @@ namespace WeETL.Tests
         public void TestEnabledChanged()
         {
             bool res = notifyClass.Enabled;
-            notifyClass.OnPropertyChanges(p => p.Enabled).Subscribe(v => { 
-                Debug.WriteLine(v); 
+            notifyClass.OnPropertyChanged.Where(p=>p=="Enabled").Subscribe(v => { 
+                Debug.WriteLine(notifyClass.Enabled); 
             });
             notifyClass.Enabled = !res;
             Assert.AreEqual(res, !notifyClass.Enabled);

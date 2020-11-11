@@ -49,18 +49,7 @@ namespace WeETL
                 );
             if (result)_onSetLookup.OnNext(this);
             return result;
-           /* if (!AcceptLookup)
-            {
-                Error.OnNext(new ConnectorException($"a Lookup Schema has already been connected"));
-                return false;
-            }
-            _lookupDisposable = lookup.Subscribe(row =>
-            {
-                _lookupRows.Add(row);
-            },
-            InternalOnException,
-            InternalOnLookupCompleted);
-            return true;*/
+
         }
         public void Join(TMapJoin join)
         {
