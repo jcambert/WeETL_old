@@ -19,8 +19,9 @@ namespace WeETL
         #region private vars
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly Stopwatch watcher = new Stopwatch();
-        private readonly List<IStartable> _jobs = new List<IStartable>();
-    
+        private  List<IStartable> _jobs = new List<IStartable>();
+        private readonly IDisposable _onStartObserver;
+        private readonly IDisposable _onCompletedObserver;
         #endregion
 
         #region ctor
@@ -31,6 +32,8 @@ namespace WeETL
         {
             Contract.Requires(ctx != null, "ETLContext cannot be null. Use the DI");
             this.Context = ctx;
+            _onStartObserver=OnStart.Subscribe(j => IsCompleted = false);
+            _onCompletedObserver=OnCompleted.Subscribe(j => IsCompleted = true);
         }
         #endregion
 
@@ -53,8 +56,14 @@ namespace WeETL
         {
             StartHandler.OnNext((this,DateTime.Now));
             CancellationToken token = tokenSource.Token;
-            await Task.Run(() => Task.WhenAll(_jobs.Select(j => j.Start())),token).ContinueWith(t => CompletedHandler.OnNext((this,DateTime.Now)));
-
+            /*await Task.Run(() => Task.WhenAll(_jobs.Select(j => j.Start())),token)
+                .ContinueWith(t => CompletedHandler.OnNext((this,DateTime.Now)));*/
+            while (_jobs.Count > 0)
+            {
+                await Task.Run(() => Task.WhenAll(_jobs.Select(j => j.Start())), token);
+                _jobs = _jobs.Where(t => !t.IsCompleted).ToList();
+            }
+            CompletedHandler.OnNext((this, DateTime.Now));
         }
         public void Stop()
         {
@@ -67,9 +76,16 @@ namespace WeETL
         public ETLContext Context { get;  }
 
         public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
+
+        public bool IsCompleted { get; private set; }
         #endregion
 
-        
+        protected override void InternalDispose()
+        {
+            base.InternalDispose();
+            _onStartObserver?.Dispose();
+            _onCompletedObserver?.Dispose();
+        }
 
     }
 }

@@ -13,12 +13,16 @@ namespace WeETL.Core
     {
         private bool _enabled = true;
         private bool _passthrue = false;
+
        // public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly ISubject<string> _onPropertyChanged = new Subject<string>();
+        
 
         public IObservable<string> OnPropertyChanged => _onPropertyChanged.AsObservable();
         public ISubject<string> PropertyChangedHandler => _onPropertyChanged;
+
+        
         /// <summary>
         /// Enable or not a component
         /// if FALSE it break the pipe, otherwise it continues

@@ -17,14 +17,13 @@ namespace WeETL.Core
         private Action<TOutputSchema> _transform;
         private IMapper _mapper;
         private Action<IMappingExpression<TInputSchema, TOutputSchema>> _mappercfg;
-        private readonly ISubject<ConnectorException> _onError = new Subject<ConnectorException>();
+        
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onSetInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onRemoveInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<TInputSchema> _inputSubject = new Subject<TInputSchema>();
         private readonly ISubject<TOutputSchema> _outputSubject = new Subject<TOutputSchema>();
-        private readonly ISubject<(ETLComponent<TInputSchema, TOutputSchema>, DateTime)> _onStart = new Subject<(ETLComponent<TInputSchema, TOutputSchema>, DateTime)>();
-        private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onCompleted = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
-
+        
+        private readonly ISubject<(int, TInputSchema)> _onBeforeTransform = new Subject<(int, TInputSchema)>();
         #endregion
         #region ctor
         public ETLComponent() : base()
@@ -36,7 +35,11 @@ namespace WeETL.Core
 
         protected ISubject<TInputSchema> InputHandler => _inputSubject;
         protected ISubject<TOutputSchema> OutputHandler => _outputSubject;
-        protected ISubject<ConnectorException> ErrorHandler => _onError;
+        
+
+        protected ISubject<(int, TInputSchema)> BeforeTransformHandler => _onBeforeTransform;
+
+        public IObservable<(int, TInputSchema)> OnBeforeTransform => BeforeTransformHandler.AsObservable();
         protected IMapper Mapper
         {
             get
@@ -52,7 +55,7 @@ namespace WeETL.Core
             }
         }
         #region public methods
-        public virtual bool SetInput(IObservable<TInputSchema> obs)
+        public virtual bool AddInput(IObservable<TInputSchema> obs)
         {
             var result = SetObservable<TInputSchema, TOutputSchema>(
                 obs,
@@ -89,7 +92,7 @@ namespace WeETL.Core
         {
             if (!accept)
             {
-                _onError.OnNext(new ConnectorException(acceptErrorMessage));
+                ErrorHandler.OnNext(new ConnectorException(acceptErrorMessage));
                 return false;
             }
             //_input = component;
@@ -102,13 +105,18 @@ namespace WeETL.Core
                    }
                    if ((Enabled || !Passthrue) && beforeTransform != null && transform != null && afterTransform != null && sendOutput != null)
                    {
+                       try
+                       {
 
+                           if (!Passthrue) beforeTransform(_outputCounter++, row.Value);
+                           TOut transformed = transform(row.Value);
+                           if (!Passthrue) afterTransform(_outputCounter, transformed);
 
-                       if (!Passthrue) beforeTransform(_outputCounter++, row.Value);
-                       TOut transformed = transform(row.Value);
-                       if (!Passthrue) afterTransform(_outputCounter, transformed);
-
-                       if (!deferOutput) sendOutput(_outputCounter, transformed);
+                           if (!deferOutput) sendOutput(_outputCounter, transformed);
+                       }catch(Exception ex)
+                       {
+                           ErrorHandler.OnNext(new ConnectorException($"An error happened on {this.Name}",ex));
+                       }
                    }
                },
                exception,
@@ -156,6 +164,7 @@ namespace WeETL.Core
         {
             Contract.Requires(index > 0, "InternalOnInputBeforeTransform require index >0");
             Contract.Requires(row != null, "InternalOnInputBeforeTransform row cannot be null");
+            BeforeTransformHandler.OnNext((index, row));
         }
         protected virtual TOutputSchema InternalInputTransform(TInputSchema row)
         {
@@ -182,7 +191,7 @@ namespace WeETL.Core
         protected virtual void InternalOnInputCompleted()
         {
             _outputSubject.OnCompleted();
-            _onCompleted.OnNext(this);
+            CompletedHandler.OnNext((this,DateTime.Now));
 
         }
 
@@ -191,7 +200,7 @@ namespace WeETL.Core
 
         #region public properties
         public bool AcceptInput => (_inputDisposable == null && !(this is IStartable));
-        public IObservable<ConnectorException> OnError => _onError.AsObservable();
+        //public IObservable<ConnectorException> OnError => _onError.AsObservable();
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnSetInput => _onSetInput.AsObservable();
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnRemoveInput => _onRemoveInput.AsObservable();
         public IObservable<TOutputSchema> OnOutput => OutputHandler.AsObservable();

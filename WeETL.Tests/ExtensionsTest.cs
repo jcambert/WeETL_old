@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reactive.Linq;
 using WeETL.Core;
 
@@ -29,6 +30,15 @@ namespace WeETL.Tests
             notifyClass.Enabled = !res;
             Assert.AreEqual(res, !notifyClass.Enabled);
 
+        }
+
+        [TestMethod]
+        public void TestIntIterator()
+        {
+            foreach (var item in Enumerable.Range(1,12).Select(x=>x*2))
+            {
+                Debug.WriteLine(item);
+            }
         }
     }
 }

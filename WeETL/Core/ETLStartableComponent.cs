@@ -8,13 +8,11 @@ using System.Threading.Tasks;
 namespace WeETL.Core
 {
     public abstract class ETLStartableComponent<TInputSchema, TOutputSchema> : ETLComponent<TInputSchema, TOutputSchema>, IStartable
-          where TInputSchema : class//, new()
+          where TInputSchema : class
         where TOutputSchema : class, new()
     {
         #region private vars
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
-       // private readonly ISubject<IStartable> _onStart = new Subject<IStartable>();
-        //private readonly ISubject<IStartable> _onCompleted = new Subject<IStartable>();
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _onStartObserver;
         private readonly IDisposable _onCompletedObserver;
@@ -23,8 +21,14 @@ namespace WeETL.Core
         #region ctor
         public ETLStartableComponent()
         {
-            _onStartObserver = OnStart.Subscribe(j => _timeWatcher.Start());
-            _onCompletedObserver = OnCompleted.Subscribe(j => _timeWatcher.Stop());
+            _onStartObserver = OnStart.Subscribe(j => {
+                _timeWatcher.Start(); 
+                IsCompleted = false; 
+            });
+            _onCompletedObserver = OnCompleted.Subscribe(j => {
+                _timeWatcher.Stop(); 
+                IsCompleted = true;
+            });
         }
         #endregion
 
@@ -34,6 +38,8 @@ namespace WeETL.Core
         public TimeSpan TimeElapsed => _timeWatcher.Elapsed.Duration();
 
         public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
+
+        public bool IsCompleted { get; private set; }
         #endregion
 
         #region public methods
@@ -43,9 +49,11 @@ namespace WeETL.Core
             if (!Enabled)
             {
                 OutputHandler.OnCompleted();
+                CompletedHandler.OnNext((this, DateTime.Now));
                 return Task.CompletedTask;
             }
             CancellationToken token = tokenSource.Token;
+            IsCompleted = false;
             var task = Task.Run(async () =>
             {
                 

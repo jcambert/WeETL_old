@@ -11,5 +11,7 @@ namespace WeETL.Core
 
 
         bool IsCancellationRequested { get; }
+
+        bool IsCompleted { get; }
     }
 }

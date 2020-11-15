@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using WeETL.Core;
 using WeETL.Exceptions;
@@ -17,21 +18,37 @@ namespace WeETL
 
         protected internal readonly Dictionary<string, PopulateAction<TRowGenerator<TSchema>, TSchema>> Actions = new Dictionary<string, PopulateAction<TRowGenerator<TSchema>, TSchema>>(StringComparer.OrdinalIgnoreCase);
         private bool _strict = false;
-
+        private readonly IDisposable _onGeneratedDisposable;
+        private readonly ISubject<(TSchema, int)> _onGenerated = new Subject<(TSchema, int)>();
+        private TSchema _lastRow;
+        private int _lastIter;
+        private Action<TSchema> _initSchemaFunction;
+         
         public TRowGenerator() : base()
         {
+            _onGeneratedDisposable= OnGenerated.Subscribe(iter => { _lastRow = iter.Item1;_lastIter = iter.Item2; });
         }
+
+        public ISubject<(TSchema, int)> GeneratedHandler => _onGenerated;
+        public IObservable<(TSchema, int)> OnGenerated => GeneratedHandler.AsObservable();
+
         public TRowGenerator<TSchema> Strict(bool strict)
         {
             this._strict = strict;
             return this;
         }
+        public TRowGenerator<TSchema> SchemaInitilialization(Action<TSchema> initFn)
+        {
+            this._initSchemaFunction = initFn;
+            return this;
+        }
 
-
+        public bool Retain { get; set; } = false;
 
         [Description("Nombre de Ligne a générer")]
         public int NumberOfRowToGenerate { get; set; } = 10;
 
+        public int LastIteration => _lastIter ;
 
         protected override Task InternalStart()
         {
@@ -43,14 +60,16 @@ namespace WeETL
             }
             for (int i = 0; i < NumberOfRowToGenerate; i++)
             {
-                OutputHandler.OnNext(Generate());
+                var res = Generate();
+                OutputHandler.OnNext(res);
+                GeneratedHandler.OnNext((res, i));
             }
             return Task.CompletedTask;
         }
 
         public virtual TSchema Generate()
         {
-            TSchema schema = new TSchema();
+            TSchema schema = CreateNewRow();
             foreach (var property in Actions.Keys)
             {
                 var value = Actions[property].Action(this, schema);
@@ -58,13 +77,35 @@ namespace WeETL
             }
             return schema;
         }
+        protected virtual TSchema CreateNewRow() {
+            Func<TSchema> CreateRow = () =>
+            {
+                var res = new TSchema();
+                _initSchemaFunction?.Invoke(res);
+                return res;
+            };
+            return   Retain? Mapper.Map(_lastRow ?? CreateRow()): CreateRow();
+        }
+
+        
+        protected override void InternalDispose()
+        {
+            base.InternalDispose();
+            _onGeneratedDisposable?.Dispose();
+        }
+
         public TRowGenerator<TSchema> GeneratorFor<TProperty>(Expression<Func<TSchema, TProperty>> property, TProperty value)
         {
             var propertyName = property.GetProperty()?.Name ?? null;
 
             return AddRule(propertyName, (f, t) => value);
         }
-        public TRowGenerator<TSchema> GeneratorFor<TProperty>(Expression<Func<TSchema, TProperty>> property, Func<TProperty> valueFunction)
+        public TRowGenerator<TSchema> GeneratorFor<TProperty>(Expression<Func<TSchema, TProperty>> property,Func<TRowGenerator<TSchema>, TSchema,TProperty> valueFunction)
+        {
+            var propertyName = property.GetProperty()?.Name ?? null;
+            return AddRule(propertyName, (f, t) => valueFunction(f,t));
+        }
+        public TRowGenerator<TSchema> GeneratorFor<TProperty>(Expression<Func<TSchema, TProperty>> property, Func< TProperty> valueFunction)
         {
             var propertyName = property.GetProperty()?.Name ?? null;
             return AddRule(propertyName, (f, t) => valueFunction());
@@ -88,6 +129,6 @@ namespace WeETL
             return this;
         }
 
-
+       
     }
 }

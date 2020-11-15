@@ -15,7 +15,7 @@ namespace WeETL
         where TInputSchema : class//, new()
         where TOutputSchema : class, new()
     {
-        private List<TInputSchema> inputs;
+        private TInputSchema row;
 
 
         public TInputFileJson() : base()
@@ -27,14 +27,13 @@ namespace WeETL
         {
             int counter = 0;
             var jsonString = File.ReadAllText(Filename);
-            inputs = JsonSerializer.Deserialize<List<TInputSchema>>(jsonString);
-            foreach (var row in inputs)
-            {
+            row = JsonSerializer.Deserialize<TInputSchema>(jsonString);
 
-                var transformed = InternalInputTransform(row);
-                InternalSendOutput(counter++,transformed);
 
-            }
+            var transformed = InternalInputTransform(row);
+            InternalSendOutput(counter++, transformed);
+
+
             return Task.CompletedTask;
         }
 

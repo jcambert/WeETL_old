@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -28,18 +29,20 @@ namespace WeETL
         private ILogger<TLogRow<TSchema>> _logger;
         private List<string[]> _buffer = new List<string[]>();
         private int[] _widthes;
-        
+
         private readonly List<PropertyInfo> _properties;
         private const char ROW_SEPARATOR = '|';
         private const char COL_SEPARATOR = '+';
-        private const char LINE_SEPARATOR='-';
+        private const char LINE_SEPARATOR = '-';
         private readonly int _numberOfColumn;
         private static Func<string, int, string> padright = (s, l) => s.PadRight(l);
         private static Func<string, int, string> padleft = (s, l) => s.PadLeft(l);
         private static Func<string, int, string> padboth = (s, l) => s.PadBoth(l);
-        public TLogRow(ILogger<TLogRow<TSchema>> logger)
+        public TLogRow(ILogger<TLogRow<TSchema>> logger, IConfiguration cfg, ETLContext ctx)
         {
             Contract.Requires(logger != null, "logger cannot be null. Use the DI ");
+            Contract.Requires(cfg != null, "configuration cannot be null. Use the DI ");
+            Contract.Requires(ctx != null, "context cannot be null. Use the DI ");
             this._logger = logger;
 
             _properties = typeof(TSchema).GetProperties().Where(p => p.GetCustomAttribute<LogIgnoreAttribute>() == null).OrderBy(p => p.Name).ToList();
@@ -63,19 +66,19 @@ namespace WeETL
         public TLogRowMode Mode { get; set; } = TLogRowMode.Basic;
         public bool ShowHeader { get; set; } = true;
         public bool ShowItemNumber { get; set; } = false;
-        
+
         public LogLevel Level { get; set; } = LogLevel.Critical;
 
         protected override void InternalOnInputAfterTransform(int index, TSchema row)
         {
             base.InternalOnInputAfterTransform(index, row);
             if (!Enabled) return;
-            
+
             var rowLog = new List<string>();
             foreach (var (prop, i) in _properties.WithIndex())
             {
 
-                var value = prop.GetGetMethod().Invoke(row, null)?.ToString() ?? string.Empty ; 
+                var value = prop.GetGetMethod().Invoke(row, null)?.ToString() ?? string.Empty;
                 rowLog.Add(value);
                 _widthes[i] = Math.Max(_widthes[i], value.Length);
             }
@@ -91,7 +94,7 @@ namespace WeETL
         protected override void InternalOnInputCompleted()
         {
             base.InternalOnInputCompleted();
-            
+
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("");
             string rowSeparator = ColumnSeparator.ToString();
@@ -104,20 +107,21 @@ namespace WeETL
             };
             Func<string[], string> row = Mode switch
             {
-                
+
                 TLogRowMode.Basic => (s => string.Join(RowSeparator, s)),
-                _=> (s => {
-                    return RowSeparator + string.Join(RowSeparator, s) + RowSeparator+"\n"+rowSeparator; 
+                _ => (s =>
+                {
+                    return RowSeparator + string.Join(RowSeparator, s) + RowSeparator + "\n" + rowSeparator;
                 }),
             };
 
             if (ShowItemNumber)
             {
-                rowSeparator += new string(LineSeparator, nbreColWidth  + (AdditionalSpace > 0 ? AdditionalSpace : 0)) + ColumnSeparator;
+                rowSeparator += new string(LineSeparator, nbreColWidth + (AdditionalSpace > 0 ? AdditionalSpace : 0)) + ColumnSeparator;
             }
-            foreach (var (width,index) in _widthes.WithIndex())
+            foreach (var (width, index) in _widthes.WithIndex())
             {
-                rowSeparator +=  new string(LineSeparator,width+(AdditionalSpace > 0 ? AdditionalSpace : 0) )+ColumnSeparator;
+                rowSeparator += new string(LineSeparator, width + (AdditionalSpace > 0 ? AdditionalSpace : 0)) + ColumnSeparator;
             }
             if (!ShowHeader && Mode == TLogRowMode.Table)
                 sb.AppendLine(rowSeparator);
@@ -126,8 +130,8 @@ namespace WeETL
                 foreach (var (items, col) in _buffer.WithIndex())
                 {
                     if (!ShowHeader && col == 0) continue;
-                    if (ShowHeader && col == 0 && Mode==TLogRowMode.Table) sb.AppendLine(rowSeparator);
-                    
+                    if (ShowHeader && col == 0 && Mode == TLogRowMode.Table) sb.AppendLine(rowSeparator);
+
                     foreach (var (value, index) in items.WithIndex())
                     {
                         items[index] = pad(value, _widthes[index] + (AdditionalSpace > 0 ? AdditionalSpace : 0));

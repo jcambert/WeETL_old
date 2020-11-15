@@ -17,6 +17,8 @@ namespace WeETL.Core
     {
         private readonly ISubject<(T, DateTime)> _onStart = new Subject<(T, DateTime)>();
         private readonly ISubject<(T, DateTime)> _onCompleted = new Subject<(T, DateTime)>();
+        private readonly ISubject<ConnectorException> _onError = new Subject<ConnectorException>();
+       
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _startDisposable;
         private readonly IDisposable _onCompletedDisposable;
@@ -30,9 +32,11 @@ namespace WeETL.Core
         public IObservable<(T, DateTime)> OnStart => _onStart.AsObservable();
 
         public IObservable<(T, DateTime)> OnCompleted => _onCompleted.AsObservable();
+        public IObservable<ConnectorException> OnError => _onError.AsObservable();
 
         public ISubject<(T, DateTime)> StartHandler => _onStart;
         public ISubject<(T, DateTime)> CompletedHandler => _onCompleted;
+        protected ISubject<ConnectorException> ErrorHandler => _onError;
         public TimeSpan ElapsedTime { get; private set; }
         public DateTime StartTime { get; private set; }
 

@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using WeETL.Core;
 
@@ -18,19 +21,25 @@ namespace WeETL
         private readonly bool _loadDefaultComponents;
         private readonly ISubject<ETLContext> _onLoaded = new Subject<ETLContext>();
         private readonly Dictionary<Type, int> _serviceCounter = new Dictionary<Type, int>();
-        public ETLContext(bool loadDefaultComponents=true)
+        private readonly IConfiguration _configuration;
+        public ETLContext(bool loadDefaultComponents = true)
         {
             this._loadDefaultComponents = loadDefaultComponents;
+            _configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", true, true)
+                .AddEnvironmentVariables()
+                .Build();
         }
-        public ETLContext ConfigureService(Action<IServiceCollection> cfg=null)
+        public ETLContext ConfigureService(Action<IServiceCollection> cfg = null)
         {
             if (_isConfigured) return this;
             cfg?.Invoke(_serviceCollection);
             _serviceCollection
-                .AddLogging(cfg => { cfg.AddConsole();cfg.AddDebug(); })
+               
+                .AddLogging(cfg => { cfg.AddConsole(); cfg.AddDebug(); })
                 .Configure<LoggerFilterOptions>(options => options.MinLevel = LogLevel.Information)
+                .AddSingleton(_configuration)
                 .AddTransient<Job>()
-                //.AddTransient(typeof(TLogRow<>))
                 .AddSingleton(this)
                 ;
             if (_loadDefaultComponents)
@@ -44,6 +53,7 @@ namespace WeETL
             _serviceProvider = _serviceCollection.BuildServiceProvider();
             _onLoaded.OnNext(this);
         }
+        public string ExecutionPath { get; } = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location);
         public IObservable<ETLContext> OnLoaded => _onLoaded.AsObservable();
         public dynamic Global { get; private set; } = ETLGlobal.Create();
         public ServiceProvider Provider
@@ -55,11 +65,12 @@ namespace WeETL
                 return _serviceProvider;
             }
         }
-        public T GetService<T>() {
+        public T GetService<T>()
+        {
             Contract.Ensures(Contract.Result<T>() != null, $"The service {nameof(T)} has not been registered.Check your configuration");
-           
+
             Contract.EndContractBlock();
-            T service= Provider.GetService<T>();
+            T service = Provider.GetService<T>();
             if (service.IsTypeof<ETLCoreComponent>())
             {
                 ETLCoreComponent cmp = service as ETLCoreComponent;

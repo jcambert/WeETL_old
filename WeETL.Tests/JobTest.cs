@@ -121,7 +121,7 @@ namespace WeETL.Tests
                 ++counterDeleted;
             });
             delete.Passthrue = deleting;
-            delete.SetInput(liste.OnOutput);
+            delete.AddInput(liste.OnOutput);
 
 
             await Start();
@@ -191,7 +191,7 @@ namespace WeETL.Tests
                 _ => throw new Exception("this Sort order is not managed")
 
             };
-            TRowGenerator<TestSchema1> gen = ctx.GetService< TRowGenerator<TestSchema1>>();
+            TRowGenerator<TestSchema1> gen = ctx.GetService<TRowGenerator<TestSchema1>>();
             Assert.IsNotNull(gen);
             gen.GeneratorFor(s => s.Index, e => ETLString.GetIntRandom(from, to));
             gen.NumberOfRowToGenerate = nbre;
@@ -213,7 +213,7 @@ namespace WeETL.Tests
             });
 
             sort.AddOrderBy(r => r.Index, order);
-            sort.SetInput(gen.OnOutput);
+            sort.AddInput(gen.OnOutput);
 
             TLogRow<TestSchema1> log = ctx.GetService<TLogRow<TestSchema1>>();
             Assert.IsNotNull(log);
@@ -223,7 +223,7 @@ namespace WeETL.Tests
             log.AdditionalSpace = 2;
             log.ShowItemNumber = true;
             RegisterComponentForEvents(log);
-            log.SetInput(sort.OnOutput);
+            log.AddInput(sort.OnOutput);
             job.OnCompleted.SubscribeOn(scheduler).Subscribe(job =>
             {
                 Assert.AreEqual(_counter, nbre);
@@ -256,7 +256,7 @@ namespace WeETL.Tests
             log.AdditionalSpace = 2;
             log.ShowItemNumber = true;
             RegisterComponentForEvents(log);
-            log.SetInput(ff.OnOutput);
+            log.AddInput(ff.OnOutput);
 
 
             await Start().ContinueWith(t => Thread.Sleep(1000));
@@ -275,19 +275,19 @@ namespace WeETL.Tests
             TLogRow<ConvertSchemaFrom> log1 = ctx.GetService<TLogRow<ConvertSchemaFrom>>();
             Assert.IsNotNull(log1);
             RegisterComponentForEvents(log1);
-            log1.SetInput(gen.OnOutput);
+            log1.AddInput(gen.OnOutput);
             log1.Mode = TLogRowMode.Table;
             log1.ShowItemNumber = true;
             TConvertType<ConvertSchemaFrom, ConvertSchemaTo> ct = ctx.GetService<TConvertType<ConvertSchemaFrom, ConvertSchemaTo>>();
             Assert.IsNotNull(ct);
             RegisterComponentForEvents(ct);
-            ct.SetInput(gen.OnOutput);
+            ct.AddInput(gen.OnOutput);
             ct.MapperConfiguation(s => s.ForMember(e => e.AnotherProperty, opt => opt.MapFrom(src => $"{src.AProperty}-{src.Index}")));
 
             TLogRow<ConvertSchemaTo> log = ctx.GetService<TLogRow<ConvertSchemaTo>>();
             Assert.IsNotNull(log);
             RegisterComponentForEvents(log);
-            log.SetInput(ct.OnOutput);
+            log.AddInput(ct.OnOutput);
             log.Mode = TLogRowMode.Table;
             log.ShowItemNumber = true;
             await Start().ContinueWith(t => Thread.Sleep(1000));
@@ -307,9 +307,104 @@ namespace WeETL.Tests
             Assert.IsNotNull(ct);
             Assert.AreEqual(ct.Name, "TConvertType-1");
         }
-        private void RegisterComponentForEvents<TInputSchema, TOutputSchema>(ETLComponent<TInputSchema, TOutputSchema> c)
-        where TInputSchema : class
-        where TOutputSchema : class, new()
+
+        [TestMethod]
+        public async Task TestCustomGenerator()
+        {
+            var gen = ctx.GetService<TRowGenerator<CustomGenSchema>>();
+            Assert.IsNotNull(gen);
+            RegisterComponentForEvents(gen);
+
+            gen.Retain = true;
+            gen.NumberOfRowToGenerate = 100;
+            gen.SchemaInitilialization((CustomGenSchema row) =>
+            {
+                row.Year = DateTime.Now.Year;
+            });
+            gen.GeneratorFor(e => e.Month, (gen, row) =>
+            {
+                return row.Month + 1;
+            });
+            gen.GeneratorFor(e => e.Year, (gen, row) =>
+            {
+                if (row.Month > 12)
+                {
+                    row.Month = 1;
+                    return row.Year + 1;
+                }
+                return row.Year;
+
+            });
+            gen.OnOutput.SubscribeOn(scheduler).Subscribe(row =>
+            {
+                Assert.IsTrue(row.Month > 0);
+                Assert.IsTrue(row.Month <= 12);
+            });
+            gen.AddToJob(job);
+
+            var log = ctx.GetService<TLogRow<CustomGenSchema>>();
+            Assert.IsNotNull(log);
+            RegisterComponentForEvents(log);
+            log.AddInput(gen.OnOutput);
+            log.ShowItemNumber = true;
+            log.AdditionalSpace = 2;
+            log.Mode = TLogRowMode.Table;
+            log.Alignment = TLogRowAlignment.Center;
+            await Start();//.ContinueWith(t => Thread.Sleep(1000));
+        }
+        [TestMethod]
+        public async Task TestTUnite()
+        {
+            int counter=0;
+            var gen1 = ctx.GetService<TRowGenerator<CustomGenSchema>>();
+            Assert.IsNotNull(gen1);
+            RegisterComponentForEvents(gen1);
+            gen1.Retain = true;
+            gen1.NumberOfRowToGenerate = 12;
+            gen1.SchemaInitilialization(x =>
+            {
+                x.Year = 2020;
+            });
+            gen1.GeneratorFor(e => e.Month, (gen, row) =>
+            {
+                return row.Month + 1;
+            });
+            gen1.AddToJob(job);
+
+            var gen2 = ctx.GetService<TRowGenerator<CustomGenSchema>>();
+            Assert.IsNotNull(gen2);
+            RegisterComponentForEvents(gen2);
+            gen2.Retain = true;
+            gen2.NumberOfRowToGenerate = 12;
+            gen2.SchemaInitilialization(x =>
+            {
+                x.Year = 2021;
+            });
+            gen2.GeneratorFor(e => e.Month, (gen, row) =>
+            {
+                return row.Month + 1;
+            });
+            gen2.AddToJob(job);
+
+            TUnite<CustomGenSchema> unite = ctx.GetService< TUnite<CustomGenSchema>>();
+            Assert.IsNotNull(unite);
+            RegisterComponentForEvents(unite);
+            unite.AddInput(gen1.OnOutput);
+            unite.AddInput(gen2.OnOutput);
+            unite.OnOutput.Subscribe(row => {
+                Console.WriteLine(row.ToString());
+                ++counter;
+            },
+            ()=> {
+                Console.WriteLine("Unite completed");
+            });
+          
+
+            await job.Start().ContinueWith(t=> {
+                Assert.AreEqual(counter, 24);
+            });
+        }
+        private void RegisterComponentForEvents(ETLCoreComponent c)
         {
             c.OnStart.SubscribeOn(scheduler).Subscribe(OnComponentStart);
             c.OnError.SubscribeOn(scheduler).Subscribe(OnError);
