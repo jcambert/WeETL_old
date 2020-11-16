@@ -4,6 +4,7 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using WeETL.Components;
+using WeEFLastic.Extensions.DependencyInjection;
 namespace WeETL.ConsoleApp
 {
     class Program
