@@ -10,7 +10,6 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WeETL.Core;
-
 namespace WeETL
 {
     public class ETLContext
@@ -41,6 +40,7 @@ namespace WeETL
                 .AddSingleton(_configuration)
                 .AddTransient<Job>()
                 .AddSingleton(this)
+                
                 ;
             if (_loadDefaultComponents)
                 _serviceCollection.LoadDefaultComponents();

@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL", "WeETL\WeETL.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.ConsoleApp", "WeETL.ConsoleApp\WeETL.ConsoleApp.csproj", "{3BD1930C-412C-4D7B-98E9-94852C887A8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeETL.Tests", "WeETL.Tests\WeETL.Tests.csproj", "{58BB7F34-30D6-48AC-8DAE-90E570C34979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.Tests", "WeETL.Tests\WeETL.Tests.csproj", "{58BB7F34-30D6-48AC-8DAE-90E570C34979}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeEFLastic", "WeEFLastic\WeEFLastic.csproj", "{E27E69BA-6542-4D81-94A0-CDB67ECCC886}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58BB7F34-30D6-48AC-8DAE-90E570C34979}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E27E69BA-6542-4D81-94A0-CDB67ECCC886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E27E69BA-6542-4D81-94A0-CDB67ECCC886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E27E69BA-6542-4D81-94A0-CDB67ECCC886}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E27E69BA-6542-4D81-94A0-CDB67ECCC886}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

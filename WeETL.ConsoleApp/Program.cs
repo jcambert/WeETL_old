@@ -1,14 +1,9 @@
-﻿using AutoMapper;
-using Nest;
+﻿using Nest;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using WeETL.Components;
-using WeETL.Core;
-
 namespace WeETL.ConsoleApp
 {
     class Program
@@ -31,7 +26,7 @@ namespace WeETL.ConsoleApp
         static async Task ReadOfflineProgrammeTurf()
         {
             var ctx = new ETLContext();
-            ctx.ConfigureService(cfg=> {cfg. })
+            ctx.ConfigureService(cfg => cfg.AddEntityFrameworkElastic());
             var job = ctx.CreateJob();
             var fileInput = ctx.GetService<TInputFile>();
             fileInput.Filename= Path.Combine(ctx.ExecutionPath, "14112020.json");

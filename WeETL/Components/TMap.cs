@@ -113,9 +113,9 @@ namespace WeETL
             if (!_dataCompleted || !_lookupCompleted) return;
             try
             {
-#pragma warning disable CS8509 // L'expression switch ne prend pas en charge toutes les valeurs possibles de son type d'entrée (elle n'est pas exhaustive).
+#pragma warning disable CS8524 // L'expression switch ne prend pas en charge toutes les valeurs possibles de son type d'entrée (elle n'est pas exhaustive).
                 var joinedRows = _join switch
-#pragma warning restore CS8509 // L'expression switch ne prend pas en charge toutes les valeurs possibles de son type d'entrée (elle n'est pas exhaustive).
+#pragma warning restore CS8524 // L'expression switch ne prend pas en charge toutes les valeurs possibles de son type d'entrée (elle n'est pas exhaustive).
                 {
                     TMapJoin.LeftOuter => _dataRows.LeftOuterJoin(_lookupRows, GetLeftKey, GetRightKey, (r, l) => (r, l)).ToList(),
                     TMapJoin.Inner => _dataRows.InnerJoin(_lookupRows, GetLeftKey,GetRightKey, (r, l) => (r, l)).ToList(),

@@ -61,10 +61,9 @@ namespace WeETL.Tests
             job = null;
         }
 
-        Task GenerateFiles(int nbre)
+        void GenerateFiles(int nbre)
         {
-            return Task.Run(() =>
-            {
+            
                 Directory.CreateDirectory(path);
                 TRowGenerator<FilenameSchema> fileGen = new TRowGenerator<FilenameSchema>();
                 fileGen.GeneratorFor(r => r.Filename, r => ETLString.GetAsciiRandomString());
@@ -76,13 +75,20 @@ namespace WeETL.Tests
 
                     }
                 }
-            });
+              
 
         }
         void CleanFiles()
         {
-            Directory.Delete(path, true);
-            Directory.CreateDirectory(path);
+            try
+            {
+
+                Directory.Delete(path, true);
+            }
+            finally
+            {
+                Directory.CreateDirectory(path);
+            }
         }
         [DataTestMethod]
         [DataRow(true, 10, false)]
@@ -92,7 +98,7 @@ namespace WeETL.Tests
         public async Task TestTFileListExist(bool enabled, int nbreOfFile, bool deleting)
         {
             CleanFiles();
-            await GenerateFiles(nbreOfFile);
+            GenerateFiles(nbreOfFile);
             Assert.AreEqual(nbreOfFile, Directory.EnumerateFiles(path).Count());
 
             bool hasfile = false;
@@ -168,8 +174,7 @@ namespace WeETL.Tests
 
 
             await Start();
-            await GenerateFiles(10).ContinueWith(t => Thread.Sleep(1000));
-
+            GenerateFiles(10);
             job.OnCompleted.Subscribe(job =>
             {
                 Assert.IsTrue(hasfile);

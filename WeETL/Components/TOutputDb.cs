@@ -16,7 +16,7 @@ namespace WeETL
 
         public virtual void OpenConnection()
         {
-            this._client.
+            
         }
     }
 }
