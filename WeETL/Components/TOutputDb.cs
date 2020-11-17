@@ -3,15 +3,14 @@ using WeETL.Databases;
 
 namespace WeETL
 {
-    public class TOutputDb<TInputSchema, TOutputSchema> : ETLComponent<TInputSchema, TOutputSchema>
-        where TInputSchema : class, new()
+    public class TOutputDb< TOutputSchema,TKey> : ETLComponent<TOutputSchema, TOutputSchema>
         where TOutputSchema : class, new()
     {
-        private readonly IDbClient _client;
+        
 
-        public TOutputDb(IDbClient client)
+        public TOutputDb(IRepository<TOutputSchema,TKey> repository)
         {
-            this._client = client;
+           
         }
 
         public virtual void OpenConnection()

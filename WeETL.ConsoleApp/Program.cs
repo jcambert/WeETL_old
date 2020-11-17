@@ -5,6 +5,13 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using WeETL.Components;
 using WeEFLastic.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using WeETL.Databases.MongoDb;
+using WeETL.Databases;
+using MongoDB.Driver;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+
 namespace WeETL.ConsoleApp
 {
     class Program
@@ -15,6 +22,8 @@ namespace WeETL.ConsoleApp
         {
             var dt = DateTime.UnixEpoch.AddMilliseconds(1605222000000);
             await ReadOfflineProgrammeTurf();
+
+            EF();
             // await TestJob();
 
             //await TestListDirectory();
@@ -23,6 +32,19 @@ namespace WeETL.ConsoleApp
             // Console.ReadKey();
             // Console.WriteLine(rowgen.Generate());
             // Console.WriteLine(rowgen.Generate());
+        }
+        static void EF()
+        {
+            var ctx = new ETLContext();
+            ctx.ConfigureService(cfg => {
+                cfg.Configure<MongoDbBookstoreSettings>(ctx.Configuration.GetSection(nameof(MongoDbBookstoreSettings)));
+                cfg.AddSingleton<IDatabaseSettings<MongoClientSettings>>(sp => sp.GetRequiredService<IOptions<MongoDbBookstoreSettings>>().Value);
+                cfg.AddSingleton(typeof(IRepository<WeatherSchema,ObjectId>), sp=> {
+                    return new MongoDbRepository<WeatherSchema>(sp.GetRequiredService<IDatabaseSettings<MongoClientSettings>>());
+                });
+            });
+            var repo = ctx.GetService<IRepository<WeatherSchema,ObjectId>>();
+            var dboutuput = ctx.GetService<TOutputDb<WeatherSchema,ObjectId>>();
         }
         static async Task ReadOfflineProgrammeTurf()
         {

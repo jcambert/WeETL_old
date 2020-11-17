@@ -53,6 +53,8 @@ namespace WeETL
             _serviceProvider = _serviceCollection.BuildServiceProvider();
             _onLoaded.OnNext(this);
         }
+
+        public IConfiguration Configuration => _configuration;
         public string ExecutionPath { get; } = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location);
         public IObservable<ETLContext> OnLoaded => _onLoaded.AsObservable();
         public dynamic Global { get; private set; } = ETLGlobal.Create();
