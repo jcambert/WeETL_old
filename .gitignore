@@ -31,6 +31,7 @@ msbuild.wrn
 # Visual Studio 2015
 .vs/
 
-# Mongodb
-data
-log
+# Docker
+docker-compose/esdata
+docker-compose/mongolog
+docker-compose/mongodata

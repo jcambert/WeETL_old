@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30524.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL", "WeETL\WeETL.csproj", "{64D6C729-51DD-47CB-9EE9-A556DB7843A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL", "src\WeETL\WeETL.csproj", "{64D6C729-51DD-47CB-9EE9-A556DB7843A4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.ConsoleApp", "WeETL.ConsoleApp\WeETL.ConsoleApp.csproj", "{3BD1930C-412C-4D7B-98E9-94852C887A8D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.ConsoleApp", "src\WeETL.ConsoleApp\WeETL.ConsoleApp.csproj", "{3BD1930C-412C-4D7B-98E9-94852C887A8D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.Tests", "WeETL.Tests\WeETL.Tests.csproj", "{58BB7F34-30D6-48AC-8DAE-90E570C34979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeETL.Tests", "src\WeETL.Tests\WeETL.Tests.csproj", "{58BB7F34-30D6-48AC-8DAE-90E570C34979}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeEFLastic", "WeEFLastic\WeEFLastic.csproj", "{E27E69BA-6542-4D81-94A0-CDB67ECCC886}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeEFLastic", "src\WeEFLastic\WeEFLastic.csproj", "{E27E69BA-6542-4D81-94A0-CDB67ECCC886}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
