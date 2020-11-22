@@ -7,8 +7,8 @@ using System.Reactive.Subjects;
 namespace WeETL.Core
 {
     public abstract class ETLComponent<TInputSchema, TOutputSchema> : ETLCoreComponent
-        where TInputSchema : class//, new()
-        where TOutputSchema : class, new()
+       // where TInputSchema : class//, new()
+       // where TOutputSchema : class, new()
     {
         #region private vars
 
@@ -17,13 +17,16 @@ namespace WeETL.Core
         private Action<TOutputSchema> _transform;
         private IMapper _mapper;
         private Action<IMappingExpression<TInputSchema, TOutputSchema>> _mappercfg;
-        
+
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onSetInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<ETLComponent<TInputSchema, TOutputSchema>> _onRemoveInput = new Subject<ETLComponent<TInputSchema, TOutputSchema>>();
         private readonly ISubject<TInputSchema> _inputSubject = new Subject<TInputSchema>();
         private readonly ISubject<TOutputSchema> _outputSubject = new Subject<TOutputSchema>();
-        
-        private readonly ISubject<(int, TInputSchema)> _onBeforeTransform = new Subject<(int, TInputSchema)>();
+
+        private readonly ISubject<(int, TInputSchema)> _onBeforeBeforeTransform = new Subject<(int, TInputSchema)>();
+        private readonly ISubject<(int, TInputSchema)> _onAfterBeforeTransform = new Subject<(int, TInputSchema)>();
+        private readonly ISubject<(int, TInputSchema)> _onBeforeAfterTransform = new Subject<(int, TInputSchema)>();
+        private readonly ISubject<(int, TInputSchema)> _onAfterAfterTransform = new Subject<(int, TInputSchema)>();
         #endregion
         #region ctor
         public ETLComponent() : base()
@@ -35,11 +38,13 @@ namespace WeETL.Core
 
         protected ISubject<TInputSchema> InputHandler => _inputSubject;
         protected ISubject<TOutputSchema> OutputHandler => _outputSubject;
-        
 
-        protected ISubject<(int, TInputSchema)> BeforeTransformHandler => _onBeforeTransform;
 
-        public IObservable<(int, TInputSchema)> OnBeforeTransform => BeforeTransformHandler.AsObservable();
+        protected ISubject<(int, TInputSchema)> BeforeBeforeTransformHandler => _onBeforeBeforeTransform;
+        protected ISubject<(int, TInputSchema)> AfterBeforeTransformHandler => _onAfterBeforeTransform;
+        protected ISubject<(int, TInputSchema)> BeforeAfterTransformHandler => _onBeforeAfterTransform;
+        protected ISubject<(int, TInputSchema)> AfterAfterTransformHandler => _onAfterAfterTransform;
+        //public IObservable<(int, TInputSchema)> OnBeforeTransform => BeforeTransformHandler.AsObservable();
         protected IMapper Mapper
         {
             get
@@ -58,8 +63,8 @@ namespace WeETL.Core
         public virtual bool AddInput(Job job, IObservable<TInputSchema> obs)
         {
 
-            job.AddComponent(this);
-            var result = SetObservable<TInputSchema, TOutputSchema>(
+
+            var result = SetObservable(
                 obs,
                 AcceptInput,
                 $"{this.GetType().Name} is Startable. It does not accept input",
@@ -72,7 +77,12 @@ namespace WeETL.Core
                 InternalSendOutput,
                 DeferSendingOutput
                 );
-            if (result) _onSetInput.OnNext(this);
+            if (result)
+            {
+                this.Job = job;
+                job.AddComponent(this);
+                _onSetInput.OnNext(this);
+            }
             return result;
 
         }
@@ -82,14 +92,40 @@ namespace WeETL.Core
             string acceptErrorMessage,
             ref IDisposable disposable,
             Action<Exception> exception,
-            Action completed,
-            Action<int, TIn> beforeTransform = null,
-            Func<TIn, TOut> transform = null,
-            Action<int, TOut> afterTransform = null,
-            Action<int, TOut> sendOutput = null,
-            bool deferOutput = false)
-             where TIn : class//, new() 
+            Action completed)
+             where TIn : class
             where TOut : class, new()
+        {
+            if (!accept)
+            {
+                ErrorHandler.OnNext(new ConnectorException(acceptErrorMessage));
+                return false;
+            }
+            disposable = obs.TimeInterval().Subscribe(
+               row =>
+               {
+                   if (!IsRunning)
+                   {
+                       StartHandler.OnNext((this, DateTime.Now));
+                   }
+
+               },
+               exception,
+               completed);
+            return true;
+        }
+        protected bool SetObservable(
+            IObservable<TInputSchema> obs,
+            bool accept,
+            string acceptErrorMessage,
+            ref IDisposable disposable,
+            Action<Exception> exception,
+            Action completed,
+            Action<int, TInputSchema> beforeTransform,
+            Func<TInputSchema, TOutputSchema> transform,
+            Action<int, TOutputSchema> afterTransform,
+            Action<int, TOutputSchema> sendOutput,
+            bool deferOutput = false)
 
         {
             if (!accept)
@@ -109,15 +145,28 @@ namespace WeETL.Core
                    {
                        try
                        {
+                           _outputCounter++;
+                           TInputSchema value = row.Value;
 
-                           if (!Passthrue) beforeTransform(_outputCounter++, row.Value);
-                           TOut transformed = transform(row.Value);
-                           if (!Passthrue) afterTransform(_outputCounter, transformed);
+                           if (!Passthrue)
+                           {
+                               SendBeforeBeforeTransformEvent(_outputCounter, value);
+                               beforeTransform(_outputCounter, row.Value);
+                               SendAfterBeforeTransformEvent(_outputCounter, value);
+                           }
+                           TOutputSchema transformed = transform(row.Value);
+                           if (!Passthrue)
+                           {
+                               SendBeforeAfterTransformEvent(_outputCounter, value);
+                               afterTransform(_outputCounter, transformed);
+                               SendAfterAfterTransformEvent(_outputCounter, value);
+                           }
 
                            if (!deferOutput) sendOutput(_outputCounter, transformed);
-                       }catch(Exception ex)
+                       }
+                       catch (Exception ex)
                        {
-                           ErrorHandler.OnNext(new ConnectorException($"An error happened on {this.Name}",ex));
+                           ErrorHandler.OnNext(new ConnectorException($"An error happened on {this.Name}", ex));
                        }
                    }
                },
@@ -162,11 +211,19 @@ namespace WeETL.Core
             Contract.Requires(row != null, "InternalSendOutput row cannot be null");
             _outputSubject.OnNext(row);
         }
+        protected virtual void SendBeforeBeforeTransformEvent(int index, TInputSchema row)
+        {
+            BeforeBeforeTransformHandler.OnNext((index, row));
+        }
+        protected virtual void SendAfterBeforeTransformEvent(int index, TInputSchema row)
+        {
+            AfterBeforeTransformHandler.OnNext((index, row));
+        }
         protected virtual void InternalOnInputBeforeTransform(int index, TInputSchema row)
         {
             Contract.Requires(index > 0, "InternalOnInputBeforeTransform require index >0");
             Contract.Requires(row != null, "InternalOnInputBeforeTransform row cannot be null");
-            BeforeTransformHandler.OnNext((index, row));
+            //BeforeTransformHandler.OnNext((index, row));
         }
         protected virtual TOutputSchema InternalInputTransform(TInputSchema row)
         {
@@ -176,6 +233,15 @@ namespace WeETL.Core
             var result = Mapper.Map<TOutputSchema>(row);
             this._transform?.Invoke(result);
             return result;
+
+        }
+        protected virtual void SendBeforeAfterTransformEvent(int index, TInputSchema row)
+        {
+            BeforeAfterTransformHandler.OnNext((index, row));
+        }
+        protected virtual void SendAfterAfterTransformEvent(int index, TInputSchema row)
+        {
+            AfterAfterTransformHandler.OnNext((index, row));
         }
         protected virtual void InternalOnInputAfterTransform(int index, TOutputSchema row)
         {
@@ -193,7 +259,7 @@ namespace WeETL.Core
         protected virtual void InternalOnInputCompleted()
         {
             _outputSubject.OnCompleted();
-            CompletedHandler.OnNext((this,DateTime.Now));
+            CompletedHandler.OnNext((this, DateTime.Now));
 
         }
 
@@ -206,6 +272,8 @@ namespace WeETL.Core
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnSetInput => _onSetInput.AsObservable();
         public IObservable<ETLComponent<TInputSchema, TOutputSchema>> OnRemoveInput => _onRemoveInput.AsObservable();
         public IObservable<TOutputSchema> OnOutput => OutputHandler.AsObservable();
+
+        public Job Job { get; private set; }
         #endregion
 
 
@@ -215,7 +283,7 @@ namespace WeETL.Core
             base.InternalDispose();
             _inputDisposable?.Dispose();
         }
-        
+
         #endregion
     }
 

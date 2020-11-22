@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
-using AutoMapper.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Bson;
-using Nest;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -18,7 +15,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using WeETL.Core;
-using WeETL.Schemas;
 
 namespace WeETL
 {
@@ -45,6 +41,15 @@ namespace WeETL
                 service.TryAddTransient(@type);
             }
         }
+        public static void CreateBag(this ETLContext ctx,string name)
+        {
+            ctx.Bags[name] = ETLGlobal.Create();
+        }
+        public static void CreateBag(this Job job,string name=null)
+        {
+            job.Context.CreateBag(name ?? job.Id.ToString());
+        }
+        
         internal static bool IsTypeof<T>(this object t) => (t is T);
 
 
@@ -57,6 +62,8 @@ namespace WeETL
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) =>
             source.Select((item, index) => (item, index));
 
+        /*public static IEnumerable<(T item, int index,TValue property)> WithIndex<T,TValue>(this IEnumerable<T> source,Expression<Func<T,TValue>> e) =>
+            source.Select((item, index) => (item, index,null));*/
 
         public static PropertyInfo GetProperty<T, TValue>(this Expression<Func<T, TValue>> property)
         {

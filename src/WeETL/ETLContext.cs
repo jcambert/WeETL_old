@@ -58,6 +58,8 @@ namespace WeETL
         public string ExecutionPath { get; } = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location);
         public IObservable<ETLContext> OnLoaded => _onLoaded.AsObservable();
         public dynamic Global { get; private set; } = ETLGlobal.Create();
+        public Dictionary<string, dynamic> Bags { get; private set; } = new Dictionary<string, dynamic>();
+
         public ServiceProvider Provider
         {
             get

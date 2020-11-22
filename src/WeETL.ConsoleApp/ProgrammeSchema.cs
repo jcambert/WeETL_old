@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -7,69 +8,70 @@ using WeETL.Databases;
 
 namespace WeETL.ConsoleApp
 {
-    public class ProgrammeSchema: DocumentByGuid
+    public class ProgrammeSchema
     {
         [JsonPropertyName("programme")]
         public Programme Programme { get; set; }
     }
-    public class Programme
+    public class Programme : DocumentByObjectId
     {
-        [JsonPropertyName("date"),JsonConverter(typeof(UnixDateTimeConverter))]
+        [JsonPropertyName("date"),JsonConverter(typeof(UnixDateTimeConverter)),BsonElement("date")]
         public DateTime  Date{ get; set; }
-        [JsonPropertyName("reunions")]
+        [JsonPropertyName("reunions"), BsonElement("reunions"),LogIgnore]
         public List<Reunion> Reunions { get; set; }
     }
     [DebuggerDisplay("{NumeroOfficiel}-{Hippodrome}")]
     public class Reunion
     {
-        [JsonPropertyName("numOfficiel")]
+        [JsonPropertyName("numOfficiel"), BsonElement("numOfficiel")]
         public int NumeroOfficiel { get; set; }
 
-        [JsonPropertyName("hippodrome")]
+        [JsonPropertyName("hippodrome"), BsonElement("hippodrome")]
         public Hippodrome Hippodrome { get; set; }
-        [JsonPropertyName("pays")] 
+        [JsonPropertyName("pays"), BsonElement("pays")] 
         public Pays Pays { get; set; }
-        [JsonPropertyName("courses")]
+        [JsonPropertyName("courses"), BsonElement("courses")]
         public List<Course> Courses { get; set; }
     }
 
     [DebuggerDisplay("{LibelleCourt}")]
     public class Hippodrome
     {
-        [JsonPropertyName("code")]
+        [JsonPropertyName("code"), BsonElement("code")]
         public string Code { get; set; }
-        [JsonPropertyName("libelleCourt")]
+        [JsonPropertyName("libelleCourt"), BsonElement("libelleCourt")]
         public string LibelleCourt { get; set; }
-        [JsonPropertyName("libelleLong")]
+        [JsonPropertyName("libelleLong"), BsonElement("libelleLong")]
         public string LibelleLong { get; set; }
     }
     [DebuggerDisplay("{Libelle}")]
     public class Pays
     {
-        [JsonPropertyName("code")]
+        [JsonPropertyName("code"), BsonElement("code")]
         public string Code { get; set; }
-        [JsonPropertyName("libelle")]
+        [JsonPropertyName("libelle"), BsonElement("libelle")]
         public string Libelle { get; set; }
     }
     [DebuggerDisplay("{Numero}-{Libelle}-{string.Join('-',Arrivee)}")]
     public class Course
     {
-        [JsonPropertyName("numReunion")]
+        [JsonPropertyName("numReunion"), BsonElement("reunion")]
         public int Reunion { get; set; }
-        [JsonPropertyName("numOrdre")]
+        [JsonPropertyName("numOrdre"), BsonElement("numOrdre")]
         public int Numero { get; set; }
-        [JsonPropertyName("distance")]
+        [JsonPropertyName("distance"), BsonElement("distance")]
         public int Distance { get; set; }
-        [JsonPropertyName("discipline")]
+        [JsonPropertyName("discipline"), BsonElement("discipline")]
         public string Discipline { get; set; }
-        [JsonPropertyName("specialite")]
+        [JsonPropertyName("specialite"), BsonElement("specialite")]
         public string Specialite { get; set; }
-        [JsonPropertyName("libelle")]
+        [JsonPropertyName("libelle"), BsonElement("libelle")]
         public string Libelle { get; set; }
-        [JsonPropertyName("libelleCourt")]
+        [JsonPropertyName("libelleCourt"), BsonElement("libelleCourt")]
         public string LibelleCourt { get; set; }
+        [ BsonElement("participants")]
         public List<Participant> Participants { get; set; } = new List<Participant>();
-        [JsonPropertyName("ordreArrivee"),JsonConverter(typeof(CourseArriveeConverter))]
+        [JsonPropertyName("ordreArrivee"),JsonConverter(typeof(CourseArriveeConverter)), BsonElement("arrivee")]
         public List<int> Arrivee { get; set; }
 
     }
@@ -82,25 +84,25 @@ namespace WeETL.ConsoleApp
     [DebuggerDisplay("{Numero}-{Nom}")]
     public class Participant
     {
-        [JsonPropertyName("nom")]
+        [JsonPropertyName("nom"), BsonElement("nom")]
         public string Nom { get; set; }
-        [JsonPropertyName("numPmu")]
+        [JsonPropertyName("numPmu"), BsonElement("numpmu")]
         public int Numero { get; set; }
-        [JsonPropertyName("age")]
+        [JsonPropertyName("age"), BsonElement("age")]
         public int Age { get; set; }
-        [JsonPropertyName("sexe")]
+        [JsonPropertyName("sexe"), BsonElement("sexe")]
         public string Sexe { get; set; }
-        [JsonPropertyName("oeilleres")]
+        [JsonPropertyName("oeilleres"), BsonElement("oeilleres")]
         public string Oeilleres { get; set; }
-        [JsonPropertyName("driver")]
+        [JsonPropertyName("driver"), BsonElement("driver")]
         public string Driver { get; set; }
-        [JsonPropertyName("nombreCourses")]
+        [JsonPropertyName("nombreCourses"), BsonElement("nbCourse")]
         public int NombreDeCourses { get; set; }
-        [JsonPropertyName("nombreVictoires")]
+        [JsonPropertyName("nombreVictoires"), BsonElement("nbVictoire")]
         public int NombreVictoires { get; set; }
-        [JsonPropertyName("nombrePlaces")]
+        [JsonPropertyName("nombrePlaces"), BsonElement("nbPlace")]
         public int NombrePlaces { get; set; }
-        [JsonPropertyName("musique")]
+        [JsonPropertyName("musique"), BsonElement("musique")]
         public string Musique { get; set; }
 
     }

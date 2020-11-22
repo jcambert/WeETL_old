@@ -18,8 +18,8 @@ namespace WeETL.Components
         Delete,
         Patch
     }
-
-    public class TRest<TSchema> : ETLStartableComponent<TSchema, TSchema>
+    
+    public class TRest<TSchema> : ETLStartableComponent<string, TSchema>
         where TSchema : class, new()
     {
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();

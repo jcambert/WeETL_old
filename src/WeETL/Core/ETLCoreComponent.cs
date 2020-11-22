@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 
 namespace WeETL.Core
 {
-    public interface IETLCoreComponent /*: INotifyPropertyChanged*/
+    public interface IETLCoreComponent 
     {
         public string Name { get; }
     }
@@ -14,7 +14,6 @@ namespace WeETL.Core
         private bool _enabled = true;
         private bool _passthrue = false;
 
-       // public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly ISubject<string> _onPropertyChanged = new Subject<string>();
         

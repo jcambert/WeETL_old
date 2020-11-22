@@ -23,11 +23,11 @@ namespace WeETL.Core
         {
             _onStartObserver = OnStart.Subscribe(j => {
                 _timeWatcher.Start(); 
-                IsCompleted = false; 
+                //IsCompleted = false; 
             });
             _onCompletedObserver = OnCompleted.Subscribe(j => {
                 _timeWatcher.Stop(); 
-                IsCompleted = true;
+               // IsCompleted = true;
             });
         }
         #endregion
@@ -39,7 +39,6 @@ namespace WeETL.Core
 
         public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
 
-        public bool IsCompleted { get; private set; }
         #endregion
 
         #region public methods
@@ -53,7 +52,7 @@ namespace WeETL.Core
                 return Task.CompletedTask;
             }
             CancellationToken token = tokenSource.Token;
-            IsCompleted = false;
+            
             var task = Task.Run(async () =>
             {
                 

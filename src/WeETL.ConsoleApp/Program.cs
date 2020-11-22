@@ -1,20 +1,14 @@
-﻿using Nest;
+﻿using MongoDB.Bson;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using WeETL.Components;
-using WeEFLastic.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using WeETL.Databases.MongoDb;
-using WeETL.Databases;
-using MongoDB.Driver;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using WeETL.Databases.ElasticSearch;
 using System.Threading;
-using WeETL.Schemas;
+using System.Threading.Tasks;
+using WeEFLastic.Extensions.DependencyInjection;
+using WeETL.Components;
 using WeETL.DependencyInjection;
+using WeETL.Schemas;
 
 namespace WeETL.ConsoleApp
 {
@@ -24,10 +18,11 @@ namespace WeETL.ConsoleApp
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-            var dt = DateTime.UnixEpoch.AddMilliseconds(1605222000000);
-            await ReadOfflineProgrammeTurf();
 
-            await EF();
+            //await ReadOfflineProgrammeTurf();
+            await ReadOnlineProgrammeTurf();
+            // await Covid19();
+            //await Weather();
             // await TestJob();
 
             //await TestListDirectory();
@@ -37,29 +32,42 @@ namespace WeETL.ConsoleApp
             // Console.WriteLine(rowgen.Generate());
             // Console.WriteLine(rowgen.Generate());
         }
-        static async Task EF()
+        static async Task Covid19()
+        {
+            var ctx = new ETLContext();
+            ctx.ConfigureService(cfg =>
+            {
+                cfg.UseElastic<ElasticDbCovidSettings>(ctx.Configuration, s => s.OnCreate(settings => { settings.DefaultIndex("covid"); }), typeof(Covid19Schema));
+            });
+            var job = ctx.CreateJob();
+            var ff = ctx.GetService<TRest<AllLiveFranceData>>();
+            ff.RequestUri = "https://coronavirusapi-france.now.sh/AllDataByDate?date=2020-11-20";
+
+            var log = ctx.GetService<TLogRow<Covid19Schema>>();
+            log.AddInput(job, ff.OnOutput.SelectMany(x => x.AllFranceDataByDate));
+            log.Mode = TLogRowMode.Table;
+            log.ShowItemNumber = true;
+
+            var dboutuput = ctx.GetService<TOutputDb<Covid19Schema, ObjectId>>();
+            dboutuput.AddInput(job, ff.OnOutput.SelectMany(x => x.AllFranceDataByDate));
+
+            ff.AddToJob(job);
+            await job.Start();
+            while (!job.IsCompleted)
+            {
+                Thread.Sleep(200);
+            }
+        }
+        static async Task Weather()
         {
             var ctx = new ETLContext();
             ctx.ConfigureService(cfg =>
             {
                 /* MONGO */
-                /*cfg.Configure<MongoDbBookstoreSettings>(ctx.Configuration.GetSection(nameof(MongoDbBookstoreSettings)));
-                cfg.AddSingleton<IDatabaseSettings<MongoClientSettings>>(sp => sp.GetRequiredService<IOptions<MongoDbBookstoreSettings>>().Value);
-                cfg.AddSingleton(typeof(IRepository<OpenWeatherMapSchema, ObjectId>), sp=> {
-                    return new MongoDbRepository<OpenWeatherMapSchema>(sp.GetRequiredService<IDatabaseSettings<MongoClientSettings>>());
-                });*/
                 //cfg.UseMongoDb<MongoDbBookstoreSettings>(ctx.Configuration, null, typeof(OpenWeatherMapSchema));
-                cfg.UseElastic<ElasticDbBookstoreSettings>(ctx.Configuration, s => s.OnCreate(settings => { settings.DefaultIndex("weather"); }), typeof(OpenWeatherMapSchema));
                 /* ELASTIC */
-                /* cfg.Configure<ElasticDbBookstoreSettings>(ctx.Configuration.GetSection(nameof(ElasticDbBookstoreSettings)));
-                   cfg.AddSingleton<IDatabaseSettings<ConnectionSettings>>(sp => {
-                       var settings=sp.GetRequiredService<IOptions<ElasticDbBookstoreSettings>>().Value;
-                       settings.OnCreate(settings => { settings.DefaultIndex ( "weather"); });
-                       return settings;
-                   });
-                   cfg.AddSingleton(typeof(IRepository<OpenWeatherMapSchema, ObjectId>), sp => {
-                       return new ElasticDbRepository<OpenWeatherMapSchema, ObjectId>(sp.GetRequiredService<IDatabaseSettings<ConnectionSettings>>());
-                   });*/
+                cfg.UseElastic<ElasticDbBookstoreSettings>(ctx.Configuration, s => s.OnCreate(settings => { settings.DefaultIndex("weather"); }), typeof(OpenWeatherMapSchema));
+
             });
             var job = ctx.CreateJob();
             var dboutuput = ctx.GetService<TOutputDb<OpenWeatherMapSchema, ObjectId>>();
@@ -104,51 +112,83 @@ namespace WeETL.ConsoleApp
         static async Task ReadOnlineProgrammeTurf()
         {
             var date = DateTime.Now.Subtract(TimeSpan.FromDays(1)).ToString("ddMMyyyy");
-            var node = new Uri("http://localhost:9200");
-            var settings = new ConnectionSettings(node);
-            settings.DefaultMappingFor<ProgrammeSchema>(s => s.IndexName("turf_programme"));
-            var client = new ElasticClient(settings);
-            //await client.(new DeleteIndexRequest( "turf_programme"));
-            var projectSearchResponse = await client.SearchAsync<ProgrammeSchema>();
+
             var ctx = new ETLContext();
-            var job = ctx.CreateJob();
-
-            var restProgramme = ctx.GetService<TRest<ProgrammeSchema>>();
-            restProgramme.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}?meteo=true&specialisation=INTERNET";
-            restProgramme.Mode = TRestMode.Get;
-            restProgramme.AddToJob(job);
-            ProgrammeSchema programme = null;
-            restProgramme.OnOutput.Subscribe(item =>
+            ctx.ConfigureService(cfg =>
             {
-                Console.WriteLine("receiving programme");
-                programme = item;
-                var row = item;
-                client.IndexAsync(row, idx => idx.Index("turf_programme"));
-                foreach (var reunion in row.Programme.Reunions)
-                {
-                    var r = reunion.NumeroOfficiel;
-                    foreach (var course in reunion.Courses)
-                    {
-                        var c = course.Numero;
-                        var restParticipant = ctx.GetService<TRest<ListeParticipants>>();
-                        restParticipant.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}/R{r}/C{c}/participants?specialisation=INTERNET";
-                        restParticipant.Mode = TRestMode.Get;
-                        restParticipant.AddToJob(job);
-
-                        restParticipant.OnOutput.Subscribe(ps =>
-                        {
-                            foreach (var p in ps.Participants)
-                            {
-                                Console.WriteLine(p.Nom);
-
-                            }
-                            course.Participants = ps.Participants;
-                        });
-                        restParticipant.OnError.Subscribe(ex => Console.Error.WriteLine(ex.InnerException));
-                    }
-                }
-                //return Task.CompletedTask;
+                cfg.UseElastic<ElasticDbTurfSettings>(ctx.Configuration, s => s.OnCreate(settings => { settings.DefaultIndex("turf"); }), typeof(Programme));
             });
+
+            var job = ctx.CreateJob();
+            job.CreateBag();
+            var forReunion = new TForEach<ProgrammeSchema, Reunion>();
+            var forCourse = new TForEach<(Reunion, int), Course>();
+            var action1 = new TAction<ProgrammeSchema>();
+            var restProgramme = ctx.GetService<TRest<ProgrammeSchema>>();
+            var log = ctx.GetService<TLogRow<Programme>>();
+            log.AddInput(job, restProgramme.OnOutput.Select(x => x.Programme));
+            log.Mode = TLogRowMode.Table;
+            log.ShowItemNumber = true;
+            restProgramme.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}?meteo=true&specialisation=INTERNET";
+            restProgramme.AddToJob(job);
+            //restProgramme.OnBeforeTransform
+            ProgrammeSchema programme = new ProgrammeSchema();
+            //programme.Programme.Reunions.WithIndex(e=>e.NumeroOfficiel/* (item, index) => (item,index,item.NumeroOfficiel)*/);
+            action1.AddInput(job, restProgramme.OnOutput);
+            action1.Set((Job job, ProgrammeSchema prg) => {
+                dynamic bag = job.Bag(job.Id.ToString());
+                bag.Programme = prg;
+            });
+            forReunion.AddIteration(job, restProgramme.OnOutput, (ProgrammeSchema prg) => prg.Programme.Reunions.Select(x=>(x,x.NumeroOfficiel)));
+            forCourse.AddIteration(job, forReunion.OnOutput, (r) => r.Item1.Courses.Select(x=>(x,r.Item2)));
+
+            var action2 = new TAction<(Course,int)>();
+            action2.AddInput(job, forCourse.OnOutput);
+            action2.Set(( job,cc) => { 
+                Console.WriteLine(cc.Item1.LibelleCourt);
+                var restParticipant = ctx.GetService<TRest<ListeParticipants>>();
+                restParticipant.AddToJob(job);
+                var r = cc.Item2;
+                var c = cc.Item1.Numero;
+                restParticipant.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}/R{r}/C{c}/participants?specialisation=INTERNET";
+                restParticipant.AddToJob(job);
+            });
+
+
+            var restParticipant = ctx.GetService<TRest<ListeParticipants>>();
+            //   restParticipant.AddInput()
+            /* restProgramme.OnOutput.Subscribe(item =>
+             {
+                 Console.WriteLine("receiving programme");
+                 programme = item;
+                 var row = item;
+
+                 foreach (var reunion in row.Programme.Reunions)
+                 {
+                     var r = reunion.NumeroOfficiel;
+                     foreach (var course in reunion.Courses)
+                     {
+                         var c = course.Numero;
+                         var restParticipant = ctx.GetService<TRest<ListeParticipants>>();
+                         restParticipant.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}/R{r}/C{c}/participants?specialisation=INTERNET";
+
+
+                         restParticipant.OnOutput.Subscribe(ps =>
+                         {
+                             foreach (var p in ps.Participants)
+                             {
+                                 Console.WriteLine($"{course.Libelle} {p.Numero}->{p.Nom}");
+
+                             }
+                             course.Participants = ps.Participants;
+                         });
+                         restParticipant.OnError.Subscribe(ex => Console.Error.WriteLine(ex.InnerException));
+                     }
+                 }
+
+
+             });*/
+
             restProgramme.OnCompleted.Subscribe(j =>
             {
                 Console.WriteLine("programme received");
@@ -157,13 +197,26 @@ namespace WeETL.ConsoleApp
             {
                 Console.Error.WriteLine(ex.InnerException.Message);
             });
+
+            bool usedb = false;
+            if (usedb)
+            {
+                var dbout = ctx.GetService<TOutputDb<Programme, ObjectId>>();
+                dbout.AddInput(job, restProgramme.OnOutput.Select(x => x.Programme));
+
+            }
             job.OnCompleted.Subscribe(job =>
             {
                 Console.WriteLine("Job is completed");
+
             });
 
 
             await job.Start();
+            while (!job.IsCompleted)
+            {
+                Thread.Sleep(200);
+            }
         }
         /*  static async Task TestJob() {
               string jsonFileName= @"d:\test.json";
