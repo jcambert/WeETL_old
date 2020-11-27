@@ -20,12 +20,15 @@ namespace WeETL.Components
         public string ApiVersion { get; set; } = "2.5";
         public string Lang { get; set; } = "fr";
         public string Units { get; set; } = "metric";
-
-      /*  protected override string GetRequestUri()
+        /// <summary>
+        /// used to format uri with its parameters
+        /// </summary>
+        /// <returns></returns>
+       protected override string GetRequestUri()
         {
-            var res = this.ToString(RequestUri);
+            var res = this.ToString(Options.RequestUri);
             return res;
-        }*/
+        }
     }
 
 }

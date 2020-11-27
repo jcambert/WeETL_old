@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Net.Http.Headers;
 using System.Reactive.Subjects;
+using System.Text.Json;
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -23,8 +24,8 @@ namespace WeETL.Observables
         Patch
     }
 
-    public class RestRequest<T> : AbstractObservable<T>,IDisposable
-        where T:class,new()
+    public class RestRequest<T> : AbstractObservable<T>, IDisposable
+        where T : class, new()
     {
         private static Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> Get = (client, requestUri, content, token) => client.GetAsync(requestUri, token);
         private static Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> Post = (client, requestUri, content, token) => client.PostAsync(requestUri, content, token);
@@ -33,13 +34,14 @@ namespace WeETL.Observables
         private static Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> Patch = (client, requestUri, content, token) => client.PatchAsync(requestUri, content, token);
 
         private readonly IDisposable _modeObserver;
-        private RestMode _mode =RestMode.Get;
+        private RestMode _mode = RestMode.Get;
         private Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> _requestMethod = Get;
         private bool disposedValue;
 
         public RestRequest()
         {
-            this._modeObserver = this.OnPropertyChanged.Where(p => p == "Mode").Subscribe(e => {
+            this._modeObserver = this.OnPropertyChanged.Where(p => p == "Mode").Subscribe(e =>
+            {
                 _requestMethod = Mode switch
                 {
                     RestMode.Get => Get,
@@ -53,7 +55,7 @@ namespace WeETL.Observables
 
         }
         public RestRequestOptions<T> Options { get; set; } = new RestRequestOptions<T>();
-        protected virtual string GetRequestUri() =>Options.RequestUri;
+        protected virtual string GetRequestUri() => Options.RequestUri;
         public RestMode Mode
         {
             get => _mode;
@@ -66,25 +68,30 @@ namespace WeETL.Observables
         public ISubject<string> PropertyChangedHandler { get; } = new Subject<string>();
         protected override IObservable<T> CreateOutputObservable()
         {
-            
+
             return Observable.Defer(() =>
             {
 #if DEBUG
                 Debug.WriteLine($"Constructing {nameof(RestRequest<T>)} stream");
 #endif
-                return Observable.Create<T>(async (o,ct) =>
+                return Observable.Create<T>(async (o, ct) =>
                 {
-                    var response = await _requestMethod(Options.Requester, GetRequestUri(), Options.Content, ct);
+                    var uri = GetRequestUri();
+                    var response = await _requestMethod(Options.Requester, uri, Options.Content, ct);
+
                     if (response.IsSuccessStatusCode)
                     {
+                        var stringresult = await response.Content.ReadAsStringAsync();
+                        var result = JsonSerializer.Deserialize<T>(stringresult);
+                        o.OnNext(result);
+                        o.OnCompleted();
+
+
 
                     }
                     else
-                    {
-                        o.OnError(response.)
-                    }
-                    o.OnNext();
-                    o.OnCompleted();
+                        o.OnError(new Exception(response.ReasonPhrase));
+
                     return Disposable.Empty;
                 });
             });
