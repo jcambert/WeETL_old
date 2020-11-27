@@ -12,7 +12,7 @@ namespace WeETL.Core
         where TOutputSchema : class, new()
     {
         #region private vars
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        protected readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _onStartObserver;
         private readonly IDisposable _onCompletedObserver;
@@ -37,7 +37,7 @@ namespace WeETL.Core
 
         public TimeSpan TimeElapsed => _timeWatcher.Elapsed.Duration();
 
-        public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
+        public bool IsCancellationRequested => TokenSource.IsCancellationRequested;
 
         #endregion
 
@@ -51,7 +51,7 @@ namespace WeETL.Core
                 CompletedHandler.OnNext((this, DateTime.Now));
                 return Task.CompletedTask;
             }
-            CancellationToken token = tokenSource.Token;
+            CancellationToken token = TokenSource.Token;
             
             var task = Task.Run(async () =>
             {
@@ -60,16 +60,11 @@ namespace WeETL.Core
                 token.ThrowIfCancellationRequested();
                 try
                 {
-                    if (!token.IsCancellationRequested)
-                    {
-                        await InternalStart();
+                    
+                        await InternalStart(TokenSource);
                         
                         OutputHandler.OnCompleted();
-                    }
-                    else
-                    {
-
-                    }
+                  
                 }
                 catch (OperationCanceledException)
                 {
@@ -85,12 +80,12 @@ namespace WeETL.Core
 
         public void Stop()
         {
-            tokenSource.Cancel();
+            TokenSource.Cancel();
         }
         #endregion
 
         #region protected methods
-        protected abstract Task InternalStart();
+        protected abstract Task InternalStart(CancellationTokenSource tokenSource);
 
         protected override void InternalDispose()
         {

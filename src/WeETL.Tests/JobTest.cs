@@ -10,6 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using WeETL.Components;
 using WeETL.Core;
+using WeETL.Observables;
+using WeETL.Observers;
 using WeETL.Schemas;
 
 namespace WeETL.Tests
@@ -60,19 +62,20 @@ namespace WeETL.Tests
 
         void GenerateFiles(int nbre)
         {
-            
-                Directory.CreateDirectory(path);
-                TRowGenerator<FilenameSchema> fileGen = new TRowGenerator<FilenameSchema>();
-                fileGen.GeneratorFor(r => r.Filename, r => ETLString.GetAsciiRandomString());
-                fileGen.NumberOfRowToGenerate = nbre;
-                for (int i = 0; i < nbre; i++)
-                {
-                    using (File.Create(Path.Combine(path, $"{fileGen.Generate().Filename}.txt")))
-                    {
 
-                    }
+            Directory.CreateDirectory(path);
+            RowGenerator<FilenameSchema> fileGen = new RowGenerator<FilenameSchema>(new RowGeneratorOptions<FilenameSchema>().GeneratorFor(r => r.Filename, r => ETLString.GetAsciiRandomString()));
+           
+           
+            fileGen.NumberOfRowToGenerate = nbre;
+            for (int i = 0; i < nbre; i++)
+            {
+                using (File.Create(Path.Combine(path, $"{fileGen.Generate().Filename}.txt")))
+                {
+
                 }
-              
+            }
+
 
         }
         void CleanFiles()
@@ -86,6 +89,24 @@ namespace WeETL.Tests
             {
                 Directory.CreateDirectory(path);
             }
+        }
+
+        [DataTestMethod]
+        [DataRow(10)]
+        public async Task TestTFileList(int nbreOfFile)
+        {
+            CleanFiles();
+            GenerateFiles(nbreOfFile);
+            Assert.AreEqual(nbreOfFile, Directory.EnumerateFiles(path).Count());
+            TFileList<FilenameSchema> liste = ctx.GetService<TFileList<FilenameSchema>>();
+            Assert.IsNotNull(liste);
+            RegisterComponentForEvents(liste);
+            liste.Path = path;
+            liste.AddToJob(job);
+            var dbg = new DebugObserver<FilenameSchema>(nameof(TestTFileList));
+            liste.OnOutput.SubscribeOn(scheduler).Subscribe(dbg);
+            scheduler.Start();
+            await job.Start();
         }
         [DataTestMethod]
         [DataRow(true, 10, false)]
@@ -124,7 +145,7 @@ namespace WeETL.Tests
                 ++counterDeleted;
             });
             delete.Passthrue = deleting;
-            delete.AddInput(job,liste.OnOutput);
+            delete.AddInput(job, liste.OnOutput);
 
 
             await Start();
@@ -195,7 +216,7 @@ namespace WeETL.Tests
             };
             TRowGenerator<TestSchema1> gen = ctx.GetService<TRowGenerator<TestSchema1>>();
             Assert.IsNotNull(gen);
-            gen.GeneratorFor(s => s.Index, e => ETLString.GetIntRandom(from, to));
+            gen.Options=new RowGeneratorOptions<TestSchema1>().GeneratorFor(s => s.Index, e => ETLString.GetIntRandom(from, to));
             gen.NumberOfRowToGenerate = nbre;
             RegisterComponentForEvents(gen);
             gen.AddToJob(job);
@@ -215,7 +236,7 @@ namespace WeETL.Tests
             });
 
             sort.AddOrderBy(r => r.Index, order);
-            sort.AddInput(job,gen.OnOutput);
+            sort.AddInput(job, gen.OnOutput);
 
             TLogRow<TestSchema1> log = ctx.GetService<TLogRow<TestSchema1>>();
             Assert.IsNotNull(log);
@@ -225,7 +246,7 @@ namespace WeETL.Tests
             log.AdditionalSpace = 2;
             log.ShowItemNumber = true;
             RegisterComponentForEvents(log);
-            log.AddInput(job,sort.OnOutput);
+            log.AddInput(job, sort.OnOutput);
             job.OnCompleted.SubscribeOn(scheduler).Subscribe(job =>
             {
                 Assert.AreEqual(_counter, nbre);
@@ -242,10 +263,11 @@ namespace WeETL.Tests
         {
             TRest<WeatherSchema> ff = ctx.GetService<TRest<WeatherSchema>>();
             Assert.IsNotNull(ff);
-            ff.Mode = TRestMode.Get;
-            ff.Headers.Add("X-Rapidapi-Key", "151c615575msh9dcd2d04eaacee6p1b536fjsnffc5ef311334");
-            ff.Headers.Add("X-Rapidapi-Host", "community-open-weather-map.p.rapidapi.com");
-            ff.RequestUri = "https://community-open-weather-map.p.rapidapi.com/weather?q=paris&lang=fr";
+            
+            
+            ff.Options.Headers.Add("X-Rapidapi-Key", "151c615575msh9dcd2d04eaacee6p1b536fjsnffc5ef311334");
+            ff.Options.Headers.Add("X-Rapidapi-Host", "community-open-weather-map.p.rapidapi.com");
+            ff.Options.RequestUri = "https://community-open-weather-map.p.rapidapi.com/weather?q=paris&lang=fr";
             RegisterComponentForEvents(ff);
 
             ff.AddToJob(job);
@@ -258,7 +280,7 @@ namespace WeETL.Tests
             log.AdditionalSpace = 2;
             log.ShowItemNumber = true;
             RegisterComponentForEvents(log);
-            log.AddInput(job,ff.OnOutput);
+            log.AddInput(job, ff.OnOutput);
 
 
             await Start().ContinueWith(t => Thread.Sleep(1000));
@@ -271,13 +293,14 @@ namespace WeETL.Tests
             TRowGenerator<ConvertSchemaFrom> gen = ctx.GetService<TRowGenerator<ConvertSchemaFrom>>();
             Assert.IsNotNull(gen);
             RegisterComponentForEvents(gen);
-            gen.GeneratorFor(e => e.Index, e => ETLString.GetIntRandom(1, 100));
-            gen.GeneratorFor(e => e.AProperty, e => ETLString.GetAsciiRandomString(20));
+            gen.Options=new RowGeneratorOptions<ConvertSchemaFrom>()
+            .GeneratorFor(e => e.Index, e => ETLString.GetIntRandom(1, 100))
+            .GeneratorFor(e => e.AProperty, e => ETLString.GetAsciiRandomString(20));
             gen.AddToJob(job);
             TLogRow<ConvertSchemaFrom> log1 = ctx.GetService<TLogRow<ConvertSchemaFrom>>();
             Assert.IsNotNull(log1);
             RegisterComponentForEvents(log1);
-            log1.AddInput(job,gen.OnOutput);
+            log1.AddInput(job, gen.OnOutput);
             log1.Mode = TLogRowMode.Table;
             log1.ShowItemNumber = true;
             TConvertType<ConvertSchemaFrom, ConvertSchemaTo> ct = ctx.GetService<TConvertType<ConvertSchemaFrom, ConvertSchemaTo>>();
@@ -316,18 +339,12 @@ namespace WeETL.Tests
             var gen = ctx.GetService<TRowGenerator<CustomGenSchema>>();
             Assert.IsNotNull(gen);
             RegisterComponentForEvents(gen);
-
-            gen.Retain = true;
-            gen.NumberOfRowToGenerate = 100;
-            gen.SchemaInitilialization((CustomGenSchema row) =>
-            {
-                row.Year = DateTime.Now.Year;
-            });
-            gen.GeneratorFor(e => e.Month, (gen, row) =>
+            gen.Options = new RowGeneratorOptions<CustomGenSchema>() { Retain = true, InitFunction = (CustomGenSchema row) => { row.Year = DateTime.Now.Year; } }
+            .GeneratorFor(e => e.Month, (gen, row) =>
             {
                 return row.Month + 1;
-            });
-            gen.GeneratorFor(e => e.Year, (gen, row) =>
+            })
+            .GeneratorFor(e => e.Year, (gen, row) =>
             {
                 if (row.Month > 12)
                 {
@@ -337,6 +354,7 @@ namespace WeETL.Tests
                 return row.Year;
 
             });
+            gen.NumberOfRowToGenerate = 100;
             gen.OnOutput.SubscribeOn(scheduler).Subscribe(row =>
             {
                 Assert.IsTrue(row.Month > 0);
@@ -357,54 +375,67 @@ namespace WeETL.Tests
         [TestMethod]
         public async Task TestTUnite()
         {
-            int counter=0;
+            int counter = 0;
             var gen1 = ctx.GetService<TRowGenerator<CustomGenSchema>>();
             Assert.IsNotNull(gen1);
             RegisterComponentForEvents(gen1);
-            gen1.Retain = true;
-            gen1.NumberOfRowToGenerate = 12;
-            gen1.SchemaInitilialization(x =>
-            {
-                x.Year = 2020;
-            });
-            gen1.GeneratorFor(e => e.Month, (gen, row) =>
+            gen1.Options=new RowGeneratorOptions<CustomGenSchema>(){ Retain=true,InitFunction=(CustomGenSchema row)=> { row.Year = 2020; } }
+            
+            .GeneratorFor(e => e.Month, (gen, row) =>
             {
                 return row.Month + 1;
             });
+            
+            gen1.NumberOfRowToGenerate = 12;
             gen1.AddToJob(job);
 
             var gen2 = ctx.GetService<TRowGenerator<CustomGenSchema>>();
             Assert.IsNotNull(gen2);
             RegisterComponentForEvents(gen2);
-            gen2.Retain = true;
-            gen2.NumberOfRowToGenerate = 12;
-            gen2.SchemaInitilialization(x =>
-            {
-                x.Year = 2021;
-            });
-            gen2.GeneratorFor(e => e.Month, (gen, row) =>
+            gen2.Options=new RowGeneratorOptions<CustomGenSchema>() {Retain=true,InitFunction=(CustomGenSchema row)=> { row.Year = 2021; } }
+            .GeneratorFor(e => e.Month, (gen, row) =>
             {
                 return row.Month + 1;
             });
+            
+            gen2.NumberOfRowToGenerate = 12;
+            
             gen2.AddToJob(job);
 
-            TUnite<CustomGenSchema> unite = ctx.GetService< TUnite<CustomGenSchema>>();
+            TUnite<CustomGenSchema> unite = ctx.GetService<TUnite<CustomGenSchema>>();
             Assert.IsNotNull(unite);
             RegisterComponentForEvents(unite);
             unite.AddInput(gen1.OnOutput);
             unite.AddInput(gen2.OnOutput);
-            unite.OnOutput.Subscribe(row => {
+            unite.OnOutput.Subscribe(row =>
+            {
                 Console.WriteLine(row.ToString());
                 ++counter;
             },
-            ()=> {
+            () =>
+            {
                 Console.WriteLine("Unite completed");
             });
-          
 
-            await job.Start().ContinueWith(t=> {
+
+            await job.Start().ContinueWith(t =>
+            {
                 Assert.AreEqual(counter, 24);
             });
+        }
+
+        [TestMethod]
+        public async Task TestRestOpenWeather()
+        {
+            var weatherService = ctx.GetService<TOpenWeather>();
+            Assert.IsNotNull(weatherService);
+            RegisterComponentForEvents(weatherService);
+            weatherService.AddToJob(job);
+            weatherService.City = "delle";
+            weatherService.ApiKey = "d288da12b207992dd796241cf56014b1";
+            weatherService.OnOutput.SubscribeOn(scheduler).Subscribe(new DebugObserver<OpenWeatherMapSchema>());
+            scheduler.Start();
+            await job.Start();
         }
         private void RegisterComponentForEvents(ETLCoreComponent c)
         {

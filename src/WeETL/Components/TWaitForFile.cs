@@ -67,7 +67,7 @@ namespace WeETL.Components
         #endregion
 
         #region public methods
-        protected override Task InternalStart()
+        protected override Task InternalStart(CancellationTokenSource token)
         {
 
 

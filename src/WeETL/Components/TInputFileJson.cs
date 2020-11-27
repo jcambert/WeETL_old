@@ -23,7 +23,7 @@ namespace WeETL
 
         }
 
-        protected override Task InternalStart()
+        protected override Task InternalStart(CancellationTokenSource token)
         {
             int counter = 0;
             var jsonString = File.ReadAllText(Filename);

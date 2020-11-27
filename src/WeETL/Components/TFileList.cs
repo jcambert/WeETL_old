@@ -1,7 +1,10 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using WeETL.Core;
+using WeETL.Observables;
 using WeETL.Schemas;
 
 namespace WeETL.Components
@@ -14,11 +17,11 @@ namespace WeETL.Components
 
         public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
 
-        protected override Task InternalStart()
+        protected override Task InternalStart(CancellationTokenSource tokenSource)
         {
-           
-           var files= Directory.EnumerateFiles(Path, SearchPattern, SearchOption).Select(s => new TOutputSchema() {Filename=s });
-            files.ToList().ForEach(f => OutputHandler.OnNext(f));
+            DirectoryFileObservable dfo = new DirectoryFileObservable(Path, SearchPattern, SearchOption);
+            dfo.Output.Select(s => new TOutputSchema() { Filename = s }).Subscribe(OutputHandler);
+
             return Task.CompletedTask;
         }
     }

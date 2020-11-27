@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using WeETL.Core;
 using WeETL.Schemas;
@@ -8,7 +9,7 @@ namespace WeETL
     public class TInputFile : ETLStartableComponent<string, ContentSchema<string>>
     {
         public string Filename { get; set; }
-        protected override Task InternalStart()
+        protected override Task InternalStart(CancellationTokenSource token)
         {
             string value= File.ReadAllText(Filename);
             ContentSchema<string> result = new ContentSchema<string>() { Content = value };

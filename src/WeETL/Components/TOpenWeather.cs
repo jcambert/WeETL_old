@@ -10,7 +10,7 @@ namespace WeETL.Components
         public TOpenWeather(IConfiguration cfg,ILogger<TOpenWeather> logger):base(logger)
         {
             cfg.GetSection(OPENWEATHERMAP_SECTION).Bind(this);
-            RequestUri = RequestUri ?? DEFAULT_API_URI;
+            Options.RequestUri = Options.RequestUri ?? DEFAULT_API_URI;
             
         }
         public const string OPENWEATHERMAP_SECTION = "OpenWeatherMap";
@@ -21,11 +21,11 @@ namespace WeETL.Components
         public string Lang { get; set; } = "fr";
         public string Units { get; set; } = "metric";
 
-        protected override string GetRequestUri()
+      /*  protected override string GetRequestUri()
         {
             var res = this.ToString(RequestUri);
             return res;
-        }
+        }*/
     }
 
 }
