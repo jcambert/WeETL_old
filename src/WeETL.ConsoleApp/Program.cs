@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using WeEFLastic.Extensions.DependencyInjection;
 using WeETL.Components;
 using WeETL.DependencyInjection;
+using WeETL.Observers;
 using WeETL.Schemas;
 
 namespace WeETL.ConsoleApp
@@ -18,9 +19,10 @@ namespace WeETL.ConsoleApp
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-
+            var numbers = new NumbersObservable(5);
+            var subscription = numbers.Subscribe(new ConsoleObserver<int>("numbers"));
             //await ReadOfflineProgrammeTurf();
-            await ReadOnlineProgrammeTurf();
+            // await ReadOnlineProgrammeTurf();
             // await Covid19();
             //await Weather();
             // await TestJob();
@@ -31,6 +33,7 @@ namespace WeETL.ConsoleApp
             // Console.ReadKey();
             // Console.WriteLine(rowgen.Generate());
             // Console.WriteLine(rowgen.Generate());
+            Console.ReadLine();
         }
         static async Task Covid19()
         {
