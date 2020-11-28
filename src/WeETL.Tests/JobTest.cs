@@ -267,7 +267,7 @@ namespace WeETL.Tests
             
             ff.Options.Headers.Add("X-Rapidapi-Key", "151c615575msh9dcd2d04eaacee6p1b536fjsnffc5ef311334");
             ff.Options.Headers.Add("X-Rapidapi-Host", "community-open-weather-map.p.rapidapi.com");
-            ff.Options.RequestUri = "https://community-open-weather-map.p.rapidapi.com/weather?q=paris&lang=fr";
+            ff.RequestUri = "https://community-open-weather-map.p.rapidapi.com/weather?q=paris&lang=fr";
             RegisterComponentForEvents(ff);
 
             ff.AddToJob(job);
@@ -429,13 +429,13 @@ namespace WeETL.Tests
         {
             var weatherService = ctx.GetService<TOpenWeather>();
             Assert.IsNotNull(weatherService);
-            RegisterComponentForEvents(weatherService);
+            //RegisterComponentForEvents(weatherService);
             weatherService.AddToJob(job);
             weatherService.City = "delle";
             weatherService.ApiKey = "d288da12b207992dd796241cf56014b1";
-            weatherService.OnOutput.SubscribeOn(scheduler).Subscribe(new DebugObserver<OpenWeatherMapSchema>());
+            weatherService.OnOutput.SubscribeOn(scheduler).Subscribe(new DebugObserver<OpenWeatherMapSchema>(nameof(TestRestOpenWeather)));
             scheduler.Start();
-            await job.Start();
+            await job.Start().ContinueWith(t=>Thread.Sleep(2000));
         }
         private void RegisterComponentForEvents(ETLCoreComponent c)
         {

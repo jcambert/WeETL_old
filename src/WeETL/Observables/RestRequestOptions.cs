@@ -11,7 +11,7 @@ namespace WeETL.Observables
     public class RestRequestOptions<T>
         where T : class, new()
     {
-        public string RequestUri { get; set; }
+        
         public HttpContent Content { get; set; }
         public HttpClient Requester { get; } = new HttpClient();
         public HttpRequestHeaders Headers => Requester.DefaultRequestHeaders;

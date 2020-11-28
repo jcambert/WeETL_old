@@ -6,7 +6,7 @@ using WeETL.Schemas;
 namespace WeETL
 {
     public class TFileDelete<TInputSchema, TOutputSchema> : ETLComponent<TInputSchema, TOutputSchema>
-        where TInputSchema : class,IFilenameSchema//, new()
+        where TInputSchema : class,IFilenameSchema
         where TOutputSchema :class, IFilenameSchema, new()
     {
         protected override void InternalOnInputAfterTransform(int index, TOutputSchema row)

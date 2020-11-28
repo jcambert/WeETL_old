@@ -10,8 +10,9 @@ namespace WeETL.Observables
         
       
 
-        public AbstractObservable()
+        public AbstractObservable(CancellationTokenSource cts=null)
         {
+            TokenSource = cts ?? new CancellationTokenSource();
             Output = CreateOutputObservable();
             Check.NotNull(Output,nameof(Output));
         }
@@ -22,6 +23,6 @@ namespace WeETL.Observables
         public IDisposable Subscribe(IObserver<T> observer) => Output.Subscribe(observer);
 
         public IObservable<T> Output { get; protected set; }
-        public CancellationTokenSource TokenSource { get; set; } = new CancellationTokenSource();
+        public CancellationTokenSource TokenSource { get; private set; }
     }
 }

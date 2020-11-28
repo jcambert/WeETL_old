@@ -18,4 +18,13 @@
     <ProjectReference Include="..\WeETL\WeETL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="15563001.lcc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="weather.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

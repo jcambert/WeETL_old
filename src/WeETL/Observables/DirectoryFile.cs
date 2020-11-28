@@ -8,10 +8,10 @@ using System.Diagnostics;
 
 namespace WeETL.Observables
 {
-    public class DirectoryFileObservable : AbstractObservable<string>
+    public class DirectoryFile : AbstractObservable<string>
     {
     
-        public DirectoryFileObservable(string path,string searchPattern="*.*",SearchOption searchOption=SearchOption.TopDirectoryOnly)
+        public DirectoryFile(string path,string searchPattern="*.*",SearchOption searchOption=SearchOption.TopDirectoryOnly)
         {
             Check.NotNull(path, nameof(Path));
             Check.NotNull(searchPattern, nameof(SearchPattern));
@@ -28,7 +28,7 @@ namespace WeETL.Observables
        => Observable.Defer(() =>
        {
 #if DEBUG
-           Debug.WriteLine($"Constructing {nameof(DirectoryFileObservable)} stream");
+           Debug.WriteLine($"Constructing {nameof(DirectoryFile)} stream");
 #endif
            var files = Directory.EnumerateFiles(Path, SearchPattern, SearchOption);
            return files.ToObservable();

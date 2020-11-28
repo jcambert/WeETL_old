@@ -19,7 +19,7 @@ namespace WeETL.Components
 
         protected override Task InternalStart(CancellationTokenSource tokenSource)
         {
-            DirectoryFileObservable dfo = new DirectoryFileObservable(Path, SearchPattern, SearchOption);
+            DirectoryFile dfo = new DirectoryFile(Path, SearchPattern, SearchOption);
             dfo.Output.Select(s => new TOutputSchema() { Filename = s }).Subscribe(OutputHandler);
 
             return Task.CompletedTask;

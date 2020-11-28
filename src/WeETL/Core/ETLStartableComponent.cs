@@ -63,7 +63,7 @@ namespace WeETL.Core
                     
                         await InternalStart(TokenSource);
                         
-                        OutputHandler.OnCompleted();
+                        //OutputHandler.OnCompleted();
                   
                 }
                 catch (OperationCanceledException)

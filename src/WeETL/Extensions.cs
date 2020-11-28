@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
@@ -20,6 +21,7 @@ namespace WeETL
 {
     public static class Extensions
     {
+        internal static string BaseLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static void AddToJob(this IStartable cmp, Job job)
         {
             Contract.Requires(cmp != null, "Startable cannot be null in order to add to job");

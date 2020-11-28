@@ -1,0 +1,43 @@
+{
+  "coord": {
+    "lon": 7,
+    "lat": 47.51
+  },
+  "weather": [
+    {
+      "id": 803,
+      "main": "Clouds",
+      "description": "nuageux",
+      "icon": "04d"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 2.48,
+    "feels_like": -2.43,
+    "temp_min": 2,
+    "temp_max": 3.33,
+    "pressure": 1017,
+    "humidity": 67
+  },
+  "visibility": 8000,
+  "wind": {
+    "speed": 3.6,
+    "deg": 360
+  },
+  "clouds": {
+    "all": 75
+  },
+  "dt": 1606571959,
+  "sys": {
+    "type": 1,
+    "id": 6585,
+    "country": "FR",
+    "sunrise": 1606546540,
+    "sunset": 1606578293
+  },
+  "timezone": 3600,
+  "id": 3021629,
+  "name": "Delle",
+  "cod": 200
+}

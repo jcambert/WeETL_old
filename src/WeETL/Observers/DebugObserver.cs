@@ -12,16 +12,16 @@ namespace WeETL.Observers
         }
         public void OnNext(T value)
         {
-            Debug.WriteLine("{0} - OnNext({1})", _name, value);
+            Debug.WriteLine($"{_name} - OnNext({value})");
         }
         public void OnError(Exception error)
         {
-            Debug.WriteLine("{0} - OnError:", _name);
-            Debug.WriteLine("\t {0}", error);
+            Debug.WriteLine($"{_name} - OnError:");
+            Debug.WriteLine($"\t {error}" );
         }
         public void OnCompleted()
         {
-            Debug.WriteLine("{0} - OnCompleted()", _name);
+            Debug.WriteLine($"{_name} - OnCompleted()");
         }
     }
 }

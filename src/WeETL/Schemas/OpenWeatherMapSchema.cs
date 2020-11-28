@@ -43,6 +43,8 @@ namespace WeETL.Schemas
         public int Pressure { get; set; }
         [JsonPropertyName("humidity"), BsonElement("humidity")]
         public int Humidity { get; set; }
+        public override string ToString()
+        => $"Nominal:{Nominale} - Minimal:{Minimum} - Maximal:{Maximum}";
     }
 
     public class Wind
@@ -69,5 +71,8 @@ namespace WeETL.Schemas
 
         [JsonPropertyName("wind"),BsonElement("wind")]
         public Wind Wind { get; set; }
+
+        public override string ToString()
+        => $"Temperature:{Temperature}";
     }
 }

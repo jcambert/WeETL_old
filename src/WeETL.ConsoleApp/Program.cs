@@ -20,18 +20,43 @@ namespace WeETL.ConsoleApp
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-           /* var numbers = new NumbersObservable(5);
-            var subscription = numbers.Subscribe(new ConsoleObserver<int>("numbers"));*/
+            WaitFile wf = new WaitFile();
+            wf.Path = @"d:\";
+            wf.Filter = "*.txt";
+            wf.StopOn = 3; 
+            var disp=wf.Output.Subscribe(file =>
+            {
+                Console.WriteLine($"{ file.EventArgs.Name} has {file.EventArgs.ChangeType.ToString()}");
+            },()=> {
+                //System.Environment.Exit(1);
+                Console.WriteLine("Stop listening");
+            });
+           
 
-            RowGenerator<TestSchema1> rowgen = new RowGenerator<TestSchema1>(new RowGeneratorOptions<TestSchema1>() 
-            .GeneratorFor(e=>e.TextColumn1,e=>ETLString.GetAsciiRandomString(20))
-            .GeneratorFor(e=>e.TextColumn2,(gen,row)=>row.TextColumn1+ " Hacked" )
-             .GeneratorFor(e=>e.UniqueId,e=>Guid.NewGuid())
-             
-            );
-            
-            rowgen.Subscribe(new ConsoleObserver<TestSchema1>());
-            var row=rowgen.Generate();
+            Console.WriteLine($"Listening {wf.Path}");
+            /*RestRequest<OpenWeatherMapSchema> rest = new RestRequest<OpenWeatherMapSchema>();
+            var apiVersion = "2.5";
+            var city = "delle";
+            var lang = "fr";
+            var units = "metric";
+            var apiKey = "d288da12b207992dd796241cf56014b1";
+            rest.RequestUri= $"http://api.openweathermap.org/data/{apiVersion}/weather?q={city}&lang={lang}&units={units}&appid={apiKey}";
+            rest.Subscribe(new ConsoleObserver<OpenWeatherMapSchema>());
+            */
+            /* var numbers = new NumbersObservable(5);
+             var subscription = numbers.Subscribe(new ConsoleObserver<int>("numbers"));*/
+
+            /*     RowGenerator<TestSchema1> rowgen = new RowGenerator<TestSchema1>(new RowGeneratorOptions<TestSchema1>() 
+                 .GeneratorFor(e=>e.TextColumn1,e=>ETLString.GetAsciiRandomString(20))
+                 .GeneratorFor(e=>e.TextColumn2,(gen,row)=>row.TextColumn1+ " Hacked" )
+                  .GeneratorFor(e=>e.UniqueId,e=>Guid.NewGuid())
+
+                 );
+
+                 rowgen.Subscribe(new ConsoleObserver<TestSchema1>());
+                 var row=rowgen.Generate();
+            */
+
             //await ReadOfflineProgrammeTurf();
             // await ReadOnlineProgrammeTurf();
             // await Covid19();
@@ -55,7 +80,7 @@ namespace WeETL.ConsoleApp
             });
             var job = ctx.CreateJob();
             var ff = ctx.GetService<TRest<AllLiveFranceData>>();
-            ff.Options.RequestUri = "https://coronavirusapi-france.now.sh/AllDataByDate?date=2020-11-20";
+            ff.RequestUri = "https://coronavirusapi-france.now.sh/AllDataByDate?date=2020-11-20";
 
             var log = ctx.GetService<TLogRow<Covid19Schema>>();
             log.AddInput(job, ff.OnOutput.SelectMany(x => x.AllFranceDataByDate));
@@ -84,19 +109,16 @@ namespace WeETL.ConsoleApp
 
             });
             var job = ctx.CreateJob();
-            var dboutuput = ctx.GetService<TOutputDb<OpenWeatherMapSchema, ObjectId>>();
+        //    var dboutuput = ctx.GetService<TOutputDb<OpenWeatherMapSchema, ObjectId>>();
             var ff = ctx.GetService<TOpenWeather>();
 
 
-            /*ff.Headers.Add("X-Rapidapi-Key", "151c615575msh9dcd2d04eaacee6p1b536fjsnffc5ef311334");
-            ff.Headers.Add("X-Rapidapi-Host", "community-open-weather-map.p.rapidapi.com");
-            ff.RequestUri = "https://community-open-weather-map.p.rapidapi.com/weather?q=montbeliard&lang=fr";*/
             ff.City = "delle";
-            ff.ApiKey = "d288da12b207992dd796241cf56014b1";
-            //ff.RequestUri = $"http://api.openweathermap.org/data/2.5/weather?q={city}&lang=fr&units=metric&appid=d288da12b207992dd796241cf56014b1";
+            ff.ApiKey = "d288da12b207992dd796241cf56014b1";      
             ff.OnError.Subscribe(err => { Console.Error.WriteLine($"{err.Message}\n{err.InnerException.Message}"); });
             ff.AddToJob(job);
-            dboutuput.AddInput(job, ff.OnOutput);
+            //dboutuput.AddInput(job, ff.OnOutput);
+            ff.OnOutput.Subscribe(new DebugObserver<OpenWeatherMapSchema>());
             await job.Start();
             while (!job.IsCompleted)
             {
@@ -143,7 +165,7 @@ namespace WeETL.ConsoleApp
             log.AddInput(job, restProgramme.OnOutput.Select(x => x.Programme));
             log.Mode = TLogRowMode.Table;
             log.ShowItemNumber = true;
-            restProgramme.Options.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}?meteo=true&specialisation=INTERNET";
+            restProgramme.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}?meteo=true&specialisation=INTERNET";
             restProgramme.AddToJob(job);
             //restProgramme.OnBeforeTransform
             ProgrammeSchema programme = new ProgrammeSchema();
@@ -164,7 +186,7 @@ namespace WeETL.ConsoleApp
                 restParticipant.AddToJob(job);
                 var r = cc.Item2;
                 var c = cc.Item1.Numero;
-                restParticipant.Options.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}/R{r}/C{c}/participants?specialisation=INTERNET";
+                restParticipant.RequestUri = $"https://online.turfinfo.api.pmu.fr/rest/client/1/programme/{date}/R{r}/C{c}/participants?specialisation=INTERNET";
                 restParticipant.AddToJob(job);
             });
 

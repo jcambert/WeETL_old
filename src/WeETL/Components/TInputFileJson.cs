@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using WeETL.Core;
+using WeETL.Observables;
 
 namespace WeETL
 {
     public class TInputFileJson<TInputSchema, TOutputSchema> : ETLStartableComponent<TInputSchema, TOutputSchema>
-        where TInputSchema : class//, new()
+        where TInputSchema : class
         where TOutputSchema : class, new()
     {
-        private TInputSchema row;
+        //private TInputSchema row;
 
 
         public TInputFileJson() : base()
@@ -25,13 +22,18 @@ namespace WeETL
 
         protected override Task InternalStart(CancellationTokenSource token)
         {
-            int counter = 0;
+            FileReadFull fl = new FileReadFull(token) { Filename = Filename };
+             fl.Output
+                .Select(s => InternalInputTransform(JsonSerializer.Deserialize<TInputSchema>(s)))
+                .Subscribe(OutputHandler, token.Token);
+
+        /*    int counter = 0;
             var jsonString = File.ReadAllText(Filename);
             row = JsonSerializer.Deserialize<TInputSchema>(jsonString);
 
 
             var transformed = InternalInputTransform(row);
-            InternalSendOutput(counter++, transformed);
+            InternalSendOutput(counter++, transformed);*/
 
 
             return Task.CompletedTask;

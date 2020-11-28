@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using WeETL.Core;
-using WeETL.Exceptions;
 using WeETL.Observables;
 
 namespace WeETL

@@ -38,7 +38,7 @@ namespace WeETL.Observables
         private Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> _requestMethod = Get;
         private bool disposedValue;
 
-        public RestRequest()
+        public RestRequest(CancellationTokenSource cts=null):base(cts)
         {
             this._modeObserver = this.OnPropertyChanged.Where(p => p == "Mode").Subscribe(e =>
             {
@@ -55,7 +55,7 @@ namespace WeETL.Observables
 
         }
         public RestRequestOptions<T> Options { get; set; } = new RestRequestOptions<T>();
-        protected virtual string GetRequestUri() => Options.RequestUri;
+        protected virtual string GetRequestUri() => RequestUri;
         public RestMode Mode
         {
             get => _mode;
@@ -66,6 +66,8 @@ namespace WeETL.Observables
         }
         public IObservable<string> OnPropertyChanged => PropertyChangedHandler.AsObservable();
         public ISubject<string> PropertyChangedHandler { get; } = new Subject<string>();
+        public string RequestUri { get; set; }
+
         protected override IObservable<T> CreateOutputObservable()
         {
 
@@ -74,26 +76,35 @@ namespace WeETL.Observables
 #if DEBUG
                 Debug.WriteLine($"Constructing {nameof(RestRequest<T>)} stream");
 #endif
-                return Observable.Create<T>(async (o, ct) =>
-                {
-                    var uri = GetRequestUri();
-                    var response = await _requestMethod(Options.Requester, uri, Options.Content, ct);
+                return Observable.Create<T>( async o =>
+              {
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var stringresult = await response.Content.ReadAsStringAsync();
-                        var result = JsonSerializer.Deserialize<T>(stringresult);
-                        o.OnNext(result);
-                        o.OnCompleted();
+                  try
+                  {
+                      var uri = GetRequestUri();
+                      var response = await _requestMethod(Options.Requester, uri, Options.Content, TokenSource.Token);
+
+                      if (response.IsSuccessStatusCode)
+                      {
+                          var stringresult = await response.Content.ReadAsStringAsync();
+                          var result = JsonSerializer.Deserialize<T>(stringresult);
+                          o.OnNext(result);
+                          //  o.OnCompleted();
+
+                      }
+                      else
+                          o.OnError(new Exception(response.ReasonPhrase));
+                  }
+                  catch(Exception e)
+                  {
+                      o.OnError(e);
+                  }
+                  
 
 
 
-                    }
-                    else
-                        o.OnError(new Exception(response.ReasonPhrase));
-
-                    return Disposable.Empty;
-                });
+                  // return Disposable.Empty;
+              });
             });
         }
 

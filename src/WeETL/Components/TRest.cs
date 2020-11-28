@@ -29,7 +29,8 @@ namespace WeETL.Components
             
             this.Logger = logger;
         }
-        protected virtual string GetRequestUri() => Options.RequestUri;
+        public string RequestUri { get; set; }
+        protected virtual string GetRequestUri() => RequestUri;
 
         public RestRequestOptions<TSchema> Options { get; set; } = new RestRequestOptions<TSchema>();
         protected override  Task InternalStart(CancellationTokenSource token)
@@ -37,8 +38,8 @@ namespace WeETL.Components
 
             RestRequest<TSchema> rest = new RestRequest<TSchema>();
             rest.Options = Options;
-            rest.Options.RequestUri = GetRequestUri();
-            rest.Subscribe(OutputHandler,TokenSource.Token);
+            rest.RequestUri = GetRequestUri();
+            rest.Subscribe(OutputHandler);
             return Task.CompletedTask;
         }
         
