@@ -20,10 +20,10 @@ namespace WeETL.ConsoleApp
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-            WaitFile wf = new WaitFile();
-            wf.Path = @"d:\";
-            wf.Filter = "*.txt";
-            wf.StopOn = 3; 
+            WaitFile wf = new WaitFile(new WaitFileOptions() {
+                Path = @"d:\",
+                Filter = "*.txt"
+            });
             var disp=wf.Output.Subscribe(file =>
             {
                 Console.WriteLine($"{ file.EventArgs.Name} has {file.EventArgs.ChangeType.ToString()}");

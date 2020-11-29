@@ -7,7 +7,16 @@ namespace WeETL.Schemas
 {
     public class FileSystemEventSchema
     {
+        public FileSystemEventSchema()
+        {
 
+        }
+        public FileSystemEventSchema(FileSystemEventArgs args)
+        {
+            ChangeType = args.ChangeType;
+            FullPath = args.FullPath;
+            Name = args.Name;
+        }
         //
         // Résumé :
         //     Gets the type of directory event that occurred.

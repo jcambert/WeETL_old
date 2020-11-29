@@ -21,24 +21,24 @@ namespace WeETL.Core
         #region ctor
         public ETLStartableComponent()
         {
-            _onStartObserver = OnStart.Subscribe(j => {
-                _timeWatcher.Start(); 
-                //IsCompleted = false; 
+            _onStartObserver = OnStart.Subscribe(j =>
+            {
+                _timeWatcher.Start();
             });
-            _onCompletedObserver = OnCompleted.Subscribe(j => {
-                _timeWatcher.Stop(); 
-               // IsCompleted = true;
+            _onCompletedObserver = OnCompleted.Subscribe(j =>
+            {
+                _timeWatcher.Stop();
             });
         }
         #endregion
 
         #region public properties
-        
+
 
         public TimeSpan TimeElapsed => _timeWatcher.Elapsed.Duration();
 
         public bool IsCancellationRequested => TokenSource.IsCancellationRequested;
-
+        
         #endregion
 
         #region public methods
@@ -52,29 +52,26 @@ namespace WeETL.Core
                 return Task.CompletedTask;
             }
             CancellationToken token = TokenSource.Token;
-            
+
             var task = Task.Run(async () =>
             {
-                
-                StartHandler.OnNext((this,DateTime.Now));
-                token.ThrowIfCancellationRequested();
+
+                StartHandler.OnNext((this, DateTime.Now));
                 try
                 {
+                    token.ThrowIfCancellationRequested();
+                    await InternalStart(TokenSource);
                     
-                        await InternalStart(TokenSource);
-                        
-                        //OutputHandler.OnCompleted();
-                  
                 }
-                catch (OperationCanceledException)
-                {
-
-                }
+                catch (OperationCanceledException) { }
                 catch (Exception e)
                 {
                     ErrorHandler.OnNext(new ConnectorException($"An error occurs while processing {this.GetType().Name}. See Inner Exception", e));
                 }
-            }, token).ContinueWith(t => CompletedHandler.OnNext((this,DateTime.Now)));
+            }, token)
+                .ContinueWith(t => { 
+                    CompletedHandler.OnNext((this, DateTime.Now)); 
+                });
             return task;
         }
 

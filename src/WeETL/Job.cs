@@ -64,7 +64,7 @@ namespace WeETL
             CancellationToken token = tokenSource.Token;
             while (_jobs.Count > 0 ||_components.Where(c=>!c.IsCompleted).Any())
             {
-                await Task.Run(() => Task.WhenAll(_jobs.Select(j => j.Start())), token);
+                await Task.Run(() => Task.WhenAll(_jobs.Where(j=>!j.IsRunning).Select(j => j.Start())), token);
                 _jobs = _jobs.Where(t => !t.IsCompleted).ToList();
                 Thread.Sleep(100);
             }

@@ -180,16 +180,22 @@ namespace WeETL.Tests
             CleanFiles();
             TWaitForFile wff = ctx.GetService<TWaitForFile>();
             Assert.IsNotNull(wff);
+            wff.Options.Path = path;
+            wff.Options.StopOnFirst = true;
             RegisterComponentForEvents(wff);
-            wff.Path = path;
+           
 
-            wff.OnOutput.SubscribeOn(scheduler).Where(f => f.ChangeType == WatcherChangeTypes.Created).Subscribe(f =>
+            wff.OnOutput.SubscribeOn(scheduler)/*.Where(f => f.ChangeType == WatcherChangeTypes.Created)*/.Subscribe(f =>
                 {
                     Debug.WriteLine($"{f.Name} was created");
                     hasfile = true;
+                },()=> {
+                    wff.Stop();
                 });
+            wff.OnCompleted.Subscribe(x => {
+                Debug.WriteLine("WFF Completed");
+            });
             wff.AddToJob(job);
-
 
             await Start();
             GenerateFiles(10);
@@ -198,7 +204,7 @@ namespace WeETL.Tests
                 Assert.IsTrue(hasfile);
             });
 
-
+           
         }
 
         [DataTestMethod]

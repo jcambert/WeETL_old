@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -15,12 +11,13 @@ namespace WeETL.Observables
 {
     public class WaitFile : AbstractObservable<EventPattern<FileSystemEventArgs>>, IDisposable
     {
+        
         private int _stopOn = 0, _stopOnCounter = 0;
         private readonly FileSystemWatcher _fileWatcher = new FileSystemWatcher();
 
         private bool disposedValue;
 
-        public WaitFile(CancellationTokenSource cts = null) : base(cts)
+        public WaitFile(WaitFileOptions options, CancellationTokenSource cts = null) : base(cts)
         {
             this.Changed = Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(
                 evt => _fileWatcher.Changed += evt,
@@ -35,9 +32,11 @@ namespace WeETL.Observables
                 evt => _fileWatcher.Renamed += evt,
                 evt => _fileWatcher.Renamed -= evt);
 
-            _fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _fileWatcher.Path = Extensions.BaseLocation;
-            _fileWatcher.Filter = "*.*";
+            NotifyFilter = options.NotifyFilters;
+            Path = options.Path;
+            Filter = options.Filter;
+            IncludeSubDirectories = options.IncludeSubDirectories;
+            StopOn = options.StopOn;
         }
 
 
@@ -47,7 +46,7 @@ namespace WeETL.Observables
         public IObservable<EventPattern<FileSystemEventArgs>> Deleted { get; private set; }
         public IObservable<EventPattern<FileSystemEventArgs>> Renamed { get; private set; }
 
-        public NotifyFilters NotifyFilters { get => _fileWatcher.NotifyFilter; set { _fileWatcher.NotifyFilter = value; } }
+        public NotifyFilters NotifyFilter { get => _fileWatcher.NotifyFilter; set { _fileWatcher.NotifyFilter = value; } }
         public string Path { get => _fileWatcher.Path; set { _fileWatcher.Path = value; } }
         public string Filter { get => _fileWatcher.Filter; set { _fileWatcher.Filter = value; } }
         public bool IncludeSubDirectories { get => _fileWatcher.IncludeSubdirectories; set { _fileWatcher.IncludeSubdirectories = value; } }
@@ -80,7 +79,7 @@ namespace WeETL.Observables
             
             .TakeWhile(x =>
             {
-                return StopOn == 0 || _stopOnCounter < StopOn;
+                return StopOn == 0 || _stopOnCounter <= StopOn;
             });
 
         });
