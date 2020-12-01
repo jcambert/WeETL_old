@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -92,12 +93,13 @@ namespace WeETL.Observables
             _fileWatcher.EnableRaisingEvents = false;
         }
 
-        public void Start()
+        public Task Start()
         {
 #if DEBUG
             Debug.WriteLine($"{nameof(WaitFile)} is starting");
 #endif
             _fileWatcher.EnableRaisingEvents = true;
+            return Task.CompletedTask;
         }
         protected virtual void Dispose(bool disposing)
         {
