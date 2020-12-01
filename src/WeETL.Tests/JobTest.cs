@@ -190,7 +190,7 @@ namespace WeETL.Tests
                     Debug.WriteLine($"{f.Name} was created");
                     hasfile = true;
                 },()=> {
-                    wff.Stop();
+                    job.Stop();
                 });
             wff.OnCompleted.Subscribe(x => {
                 Debug.WriteLine("WFF Completed");

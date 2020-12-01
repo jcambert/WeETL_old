@@ -33,13 +33,13 @@ namespace WeETL.Components
         protected virtual string GetRequestUri() => RequestUri;
 
         public RestRequestOptions<TSchema> Options { get; set; } = new RestRequestOptions<TSchema>();
-        protected override  Task InternalStart(CancellationTokenSource token)
+        protected override  Task InternalStart(CancellationToken token)
         {
 
             RestRequest<TSchema> rest = new RestRequest<TSchema>();
             rest.Options = Options;
             rest.RequestUri = GetRequestUri();
-            rest.Subscribe(OutputHandler);
+            rest.Subscribe(OutputHandler,token);
             return Task.CompletedTask;
         }
         

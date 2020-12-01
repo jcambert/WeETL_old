@@ -17,10 +17,10 @@ namespace WeETL.Components
 
         public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
 
-        protected override Task InternalStart(CancellationTokenSource tokenSource)
+        protected override Task InternalStart(CancellationToken token)
         {
             DirectoryFile dfo = new DirectoryFile(Path, SearchPattern, SearchOption);
-            dfo.Output.Select(s => new TOutputSchema() { Filename = s }).Subscribe(OutputHandler);
+            System.ObservableExtensions.Subscribe( dfo.Output.Select(s => new TOutputSchema() { Filename = s }),token);
 
             return Task.CompletedTask;
         }

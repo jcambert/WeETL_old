@@ -7,7 +7,7 @@ namespace WeETL.Observables
 {
     public class FileReadLine : AbstractObservable<string>
     {
-        public FileReadLine(CancellationTokenSource cts=null) : base(cts)
+        public FileReadLine() : base()
         {
 
         }

@@ -11,7 +11,7 @@ namespace WeETL.Observables
 {
     public class FileReadFull : AbstractObservable<string>
     {
-        public FileReadFull(CancellationTokenSource cts = null) : base(cts)
+        public FileReadFull() : base()
         {
         }
         public string Filename { get; set; }

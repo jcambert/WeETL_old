@@ -12,7 +12,8 @@ namespace WeETL.Core
         where TOutputSchema : class, new()
     {
         #region private vars
-        protected readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
+        //protected readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
+        
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _onStartObserver;
         private readonly IDisposable _onCompletedObserver;
@@ -37,13 +38,13 @@ namespace WeETL.Core
 
         public TimeSpan TimeElapsed => _timeWatcher.Elapsed.Duration();
 
-        public bool IsCancellationRequested => TokenSource.IsCancellationRequested;
+//public bool IsCancellationRequested => TokenSource.IsCancellationRequested;
         
         #endregion
 
         #region public methods
 
-        public Task Start()
+        public Task Start(CancellationToken token)
         {
             if (!Enabled)
             {
@@ -51,7 +52,7 @@ namespace WeETL.Core
                 CompletedHandler.OnNext((this, DateTime.Now));
                 return Task.CompletedTask;
             }
-            CancellationToken token = TokenSource.Token;
+            
 
             var task = Task.Run(async () =>
             {
@@ -60,7 +61,7 @@ namespace WeETL.Core
                 try
                 {
                     token.ThrowIfCancellationRequested();
-                    await InternalStart(TokenSource);
+                    await InternalStart(token);
                     
                 }
                 catch (OperationCanceledException) { }
@@ -75,14 +76,14 @@ namespace WeETL.Core
             return task;
         }
 
-        public void Stop()
+      /*  public void Stop()
         {
             TokenSource.Cancel();
-        }
+        }*/
         #endregion
 
         #region protected methods
-        protected abstract Task InternalStart(CancellationTokenSource tokenSource);
+        protected abstract Task InternalStart(CancellationToken token);
 
         protected override void InternalDispose()
         {

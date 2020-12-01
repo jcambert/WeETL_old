@@ -38,7 +38,7 @@ namespace WeETL.Observables
         private Func<HttpClient, string, HttpContent, CancellationToken, Task<HttpResponseMessage>> _requestMethod = Get;
         private bool disposedValue;
 
-        public RestRequest(CancellationTokenSource cts=null):base(cts)
+        public RestRequest():base()
         {
             this._modeObserver = this.OnPropertyChanged.Where(p => p == "Mode").Subscribe(e =>
             {
@@ -76,13 +76,13 @@ namespace WeETL.Observables
 #if DEBUG
                 Debug.WriteLine($"Constructing {nameof(RestRequest<T>)} stream");
 #endif
-                return Observable.Create<T>( async o =>
+                return Observable.Create<T>( async (o,ct) =>
               {
 
                   try
                   {
                       var uri = GetRequestUri();
-                      var response = await _requestMethod(Options.Requester, uri, Options.Content, TokenSource.Token);
+                      var response = await _requestMethod(Options.Requester, uri, Options.Content, ct);
 
                       if (response.IsSuccessStatusCode)
                       {

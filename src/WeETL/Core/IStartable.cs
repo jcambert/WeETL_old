@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WeETL.Core
 {
     public interface IStartable
     {
-        Task Start();
+        Task Start(CancellationToken cts);
 
-        void Stop();
+        // Stop();
 
 
-        bool IsCancellationRequested { get; }
+        //bool IsCancellationRequested { get; }
 
         bool IsCompleted { get; }
         bool IsRunning { get; }

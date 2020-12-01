@@ -17,13 +17,13 @@ namespace WeETL
     {
         public string Filename { get; set; }
         public InputFileMode Mode { get; set; } = InputFileMode.LineByLine;
-        protected override Task InternalStart(CancellationTokenSource token)
+        protected override Task InternalStart(CancellationToken token)
         {
-            FileReadLine fl = new FileReadLine(token) { Filename = Filename };
+            FileReadLine fl = new FileReadLine() { Filename = Filename };
             if (Mode == InputFileMode.LineByLine)
-                fl.Output.Select(s => new ContentSchema<string>() { Content = s }).Subscribe(OutputHandler, TokenSource.Token);
+                fl.Output.Select(s => new ContentSchema<string>() { Content = s }).Subscribe(OutputHandler, token);
             else
-                fl.Output.Aggregate("", (a, b) => $"{a}\n{b}").Select(s => new ContentSchema<string>() { Content = s }).Subscribe(OutputHandler, TokenSource.Token);
+                fl.Output.Aggregate("", (a, b) => $"{a}\n{b}").Select(s => new ContentSchema<string>() { Content = s }).Subscribe(OutputHandler, token);
 
 
             return Task.CompletedTask;

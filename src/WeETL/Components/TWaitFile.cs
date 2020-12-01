@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,16 +10,19 @@ using WeETL.Observables;
 
 namespace WeETL.Components
 {
-    public class TWaitFile : WaitFile, IStartable
+    public class TWaitFile : WaitFile, IStartable, IETLCoreComponent
     {
-        public TWaitFile(WaitFileOptions options, CancellationTokenSource cts = null) : base(options, cts)
+        
+        public TWaitFile(IConfiguration configuration) : base(configuration)
         {
+            
         }
 
-        public bool IsCancellationRequested => throw new NotImplementedException();
+        public bool IsCancellationRequested => Token.IsCancellationRequested;
 
-        public bool IsCompleted => throw new NotImplementedException();
+        public bool IsCompleted => false;
 
-        public bool IsRunning => throw new NotImplementedException();
+        public bool IsRunning => FileWatcher.EnableRaisingEvents;
+        public string Name { get; internal set; }
     }
 }

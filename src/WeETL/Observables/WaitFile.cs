@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -12,27 +13,50 @@ namespace WeETL.Observables
 {
     public class WaitFile : AbstractObservable<EventPattern<FileSystemEventArgs>>, IDisposable
     {
-        
+        public const string WAIT_FILE_SECTION = nameof(WaitFile);
         private int _stopOn = 0, _stopOnCounter = 0;
-        private readonly FileSystemWatcher _fileWatcher = new FileSystemWatcher();
+        protected readonly FileSystemWatcher FileWatcher = new FileSystemWatcher();
 
         private bool disposedValue;
 
-        public WaitFile(WaitFileOptions options, CancellationTokenSource cts = null) : base(cts)
+        public WaitFile(IConfiguration configuration)
+        {
+            WaitFileOptions options = new WaitFileOptions();
+            configuration.GetSection(WAIT_FILE_SECTION).Bind(options);
+            SetOptions(options );
+            Initialize();
+        }
+        public WaitFile(WaitFileOptions options) : base()
+        {
+/*
+            NotifyFilter = options.NotifyFilters;
+            Path = options.Path;
+            Filter = options.Filter;
+            IncludeSubDirectories = options.IncludeSubDirectories;
+            StopOn = options.StopOn;*/
+            SetOptions(options);
+            Initialize();
+        }
+        protected virtual void Initialize()
         {
             this.Changed = Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(
-                evt => _fileWatcher.Changed += evt,
-                evt => _fileWatcher.Changed -= evt);
+                evt => FileWatcher.Changed += evt,
+                evt => FileWatcher.Changed -= evt);
             this.Created = Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(
-                evt => _fileWatcher.Created += evt,
-                evt => _fileWatcher.Created -= evt);
+                evt => FileWatcher.Created += evt,
+                evt => FileWatcher.Created -= evt);
             this.Deleted = Observable.FromEventPattern<FileSystemEventHandler, FileSystemEventArgs>(
-                evt => _fileWatcher.Deleted += evt,
-                evt => _fileWatcher.Deleted -= evt);
+                evt => FileWatcher.Deleted += evt,
+                evt => FileWatcher.Deleted -= evt);
             this.Renamed = Observable.FromEventPattern<RenamedEventHandler, FileSystemEventArgs>(
-                evt => _fileWatcher.Renamed += evt,
-                evt => _fileWatcher.Renamed -= evt);
+                evt => FileWatcher.Renamed += evt,
+                evt => FileWatcher.Renamed -= evt);
 
+        }
+
+        private void SetOptions(WaitFileOptions options)
+        {
+            options = options ?? new WaitFileOptions();
             NotifyFilter = options.NotifyFilters;
             Path = options.Path;
             Filter = options.Filter;
@@ -41,16 +65,15 @@ namespace WeETL.Observables
         }
 
 
-
         public IObservable<EventPattern<FileSystemEventArgs>> Changed { get; private set; }
         public IObservable<EventPattern<FileSystemEventArgs>> Created { get; private set; }
         public IObservable<EventPattern<FileSystemEventArgs>> Deleted { get; private set; }
         public IObservable<EventPattern<FileSystemEventArgs>> Renamed { get; private set; }
 
-        public NotifyFilters NotifyFilter { get => _fileWatcher.NotifyFilter; set { _fileWatcher.NotifyFilter = value; } }
-        public string Path { get => _fileWatcher.Path; set { _fileWatcher.Path = value; } }
-        public string Filter { get => _fileWatcher.Filter; set { _fileWatcher.Filter = value; } }
-        public bool IncludeSubDirectories { get => _fileWatcher.IncludeSubdirectories; set { _fileWatcher.IncludeSubdirectories = value; } }
+        public NotifyFilters NotifyFilter { get => FileWatcher.NotifyFilter; set { FileWatcher.NotifyFilter = value; } }
+        public string Path { get => FileWatcher.Path; set { FileWatcher.Path = value; } }
+        public string Filter { get => FileWatcher.Filter; set { FileWatcher.Filter = value; } }
+        public bool IncludeSubDirectories { get => FileWatcher.IncludeSubdirectories; set { FileWatcher.IncludeSubdirectories = value; } }
         public bool StopOnFirst { get => StopOn == 1; set { StopOn = value ? 1 : 0; } }
         public int StopOn { get => _stopOn; set { _stopOn = value; } }
 
@@ -61,9 +84,9 @@ namespace WeETL.Observables
             Debug.WriteLine($"Constructing {nameof(WaitFile)} stream");
 #endif
 
-            TokenSource.Token.ThrowIfCancellationRequested();
+            Token.ThrowIfCancellationRequested();
 
-            _fileWatcher.EnableRaisingEvents = true;
+           // FileWatcher.EnableRaisingEvents = true;
 
             return Created
             .Merge(Changed)
@@ -90,15 +113,16 @@ namespace WeETL.Observables
 #if DEBUG
             Debug.WriteLine($"{nameof(WaitFile)} is stopping");
 #endif
-            _fileWatcher.EnableRaisingEvents = false;
+            FileWatcher.EnableRaisingEvents = false;
         }
 
-        public Task Start()
+        public Task Start(CancellationToken token)
         {
+            Token = token;
 #if DEBUG
             Debug.WriteLine($"{nameof(WaitFile)} is starting");
 #endif
-            _fileWatcher.EnableRaisingEvents = true;
+            FileWatcher.EnableRaisingEvents = true;
             return Task.CompletedTask;
         }
         protected virtual void Dispose(bool disposing)

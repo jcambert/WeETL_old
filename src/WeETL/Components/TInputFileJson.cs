@@ -20,12 +20,12 @@ namespace WeETL
 
         }
 
-        protected override Task InternalStart(CancellationTokenSource token)
+        protected override Task InternalStart(CancellationToken token)
         {
-            FileReadFull fl = new FileReadFull(token) { Filename = Filename };
+            FileReadFull fl = new FileReadFull() { Filename = Filename };
              fl.Output
                 .Select(s => InternalInputTransform(JsonSerializer.Deserialize<TInputSchema>(s)))
-                .Subscribe(OutputHandler, token.Token);
+                .Subscribe(OutputHandler, token);
 
         /*    int counter = 0;
             var jsonString = File.ReadAllText(Filename);

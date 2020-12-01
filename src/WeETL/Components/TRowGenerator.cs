@@ -22,11 +22,11 @@ namespace WeETL
 
         public int NumberOfRowToGenerate { get; set; } = 10;
 
-        protected override Task InternalStart(CancellationTokenSource tokenSource)
+        protected override Task InternalStart(CancellationToken token)
         {
             RowGenerator<TSchema> gen = new RowGenerator<TSchema>(Options);
             gen.NumberOfRowToGenerate = NumberOfRowToGenerate;
-            gen.Subscribe(OutputHandler,TokenSource.Token);
+            gen.Subscribe(OutputHandler,token);
 
            
             return Task.CompletedTask;

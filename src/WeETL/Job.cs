@@ -58,22 +58,22 @@ namespace WeETL
 #endif
             _components.Add(component);
         }
-        public async Task Start()
+        public async Task Start(CancellationToken token)
         {
             StartHandler.OnNext((this,DateTime.Now));
-            CancellationToken token = tokenSource.Token;
+            
             while (_jobs.Count > 0 ||_components.Where(c=>!c.IsCompleted).Any())
             {
-                await Task.Run(() => Task.WhenAll(_jobs.Where(j=>!j.IsRunning).Select(j => j.Start())), token);
+                await Task.Run(() => Task.WhenAll(_jobs.Where(j=>!j.IsRunning).Select(j => j.Start(token))), token);
                 _jobs = _jobs.Where(t => !t.IsCompleted).ToList();
                 Thread.Sleep(100);
             }
             CompletedHandler.OnNext((this, DateTime.Now));
+
         }
-        public void Stop()
-        {
-            tokenSource.Cancel();
-        }
+        public Task Start() => Start(tokenSource.Token);
+        public void Stop()=>tokenSource.Cancel();
+        
         #endregion
 
         #region public properties

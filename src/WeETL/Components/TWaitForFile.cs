@@ -40,11 +40,11 @@ namespace WeETL.Components
         #endregion
 
         #region public methods
-        protected override Task InternalStart(CancellationTokenSource token)
+        protected override Task InternalStart(CancellationToken token)
         {
-            bool completed = false;
-            WaitFile wf = new WaitFile(Options,token);
-            System.ObservableExtensions.Subscribe(wf.Output.Select(x => new FileSystemEventSchema(x.EventArgs)),row=> { }, () => { completed = true; });
+            
+            //WaitFile wf = new WaitFile();
+            //System.ObservableExtensions.Subscribe(wf.Output.Select(x => new FileSystemEventSchema(x.EventArgs)),row=> { }, () => { });
 
             return Task.CompletedTask;
         }
