@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 using WeETL.Core;
 using WeETL.Observables;
 using WeETL.Schemas;
-#if DEBUG
 using System;
-using System.Diagnostics;
-#endif
+
 
 namespace WeETL.Components
 {
@@ -18,12 +16,7 @@ namespace WeETL.Components
     {
         public TFileList():base()
         {
-#if DEBUG
-            OnCompleted.Subscribe(x => {
-                if (Debugger.IsAttached)
-                    Debugger.Break();
-            });
-#endif
+
         }
         public string Path { get; set; }
         public string SearchPattern { get; set; } = "*.*";
@@ -33,7 +26,6 @@ namespace WeETL.Components
         protected override Task InternalStart(CancellationToken token)
         {
             DirectoryFile dfo = new DirectoryFile(Path, SearchPattern, SearchOption);
-            //System.ObservableExtensions.Subscribe( dfo.Output.Select(s => new TOutputSchema() { Filename = s }),token);
             dfo.Output.Select(s => {
                 return new TOutputSchema() { Filename = s }; 
             }).Subscribe(OutputHandler,token);
