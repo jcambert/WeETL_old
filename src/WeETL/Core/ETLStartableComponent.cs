@@ -20,7 +20,7 @@ namespace WeETL.Core
         #endregion
 
         #region ctor
-        public ETLStartableComponent()
+        public ETLStartableComponent():base()
         {
             _onStartObserver = OnStart.Subscribe(j =>
             {

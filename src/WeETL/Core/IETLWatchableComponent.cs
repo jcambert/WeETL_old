@@ -18,17 +18,35 @@ namespace WeETL.Core
         private readonly ISubject<(T, DateTime)> _onStart = new Subject<(T, DateTime)>();
         private readonly ISubject<(T, DateTime)> _onCompleted = new Subject<(T, DateTime)>();
         private readonly ISubject<ConnectorException> _onError = new Subject<ConnectorException>();
-       
+
         private readonly Stopwatch _timeWatcher = new Stopwatch();
         private readonly IDisposable _startDisposable;
         private readonly IDisposable _onCompletedDisposable;
         private bool disposedValue;
         private bool _isCompleted;
-
+        private object o = new object();
         public ETLWatchable()
         {
-            _startDisposable = OnStart.Subscribe(c => { StartTime = c.Item2; _timeWatcher.Start(); _isCompleted = false; });
-            _onCompletedDisposable = OnCompleted.Subscribe(c => { _timeWatcher.Stop(); ElapsedTime = _timeWatcher.Elapsed; _isCompleted = true; });
+            _startDisposable = OnStart.Subscribe(c =>
+            {
+                lock (o)
+                {
+                    StartTime = c.Item2;
+                    _timeWatcher.Start();
+                    _isCompleted = false;
+
+                }
+            });
+            _onCompletedDisposable = OnCompleted.Subscribe(c =>
+            {
+                lock (o)
+                {
+                    _timeWatcher.Stop();
+                    ElapsedTime = _timeWatcher.Elapsed;
+                    _isCompleted = true;
+
+                }
+            });
         }
         public Guid Id { get; } = Guid.NewGuid();
         public IObservable<(T, DateTime)> OnStart => _onStart.AsObservable();

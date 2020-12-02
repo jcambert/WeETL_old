@@ -16,7 +16,11 @@ namespace WeETL.Core
 
 
         private readonly ISubject<string> _onPropertyChanged = new Subject<string>();
-        
+
+        public ETLCoreComponent():base()
+        {
+
+        }
 
         public IObservable<string> OnPropertyChanged => _onPropertyChanged.AsObservable();
         public ISubject<string> PropertyChangedHandler => _onPropertyChanged;

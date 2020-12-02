@@ -69,25 +69,25 @@ namespace WeETL.Tests
 
         [TestMethod]
 
-        public async Task TestWaitfileETL()
+        public void TestWaitfileETL()
         {
             var wf = ctx.GetService<TWaitFile>();
             Assert.IsNotNull(wf);
             wf.AddToJob(job);
-            ConfigureTest(wf);
-            await Start();
+            ConfigureTest(wf,true);
+            //await Start();
         }
 
         private void ConfigureTest(WaitFile wf, bool startWithJob = false)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationTokenSource cts =startWithJob?job.TokenSource:  new CancellationTokenSource();
             var token = cts.Token;
             token.ThrowIfCancellationRequested();
-            wf.StopOnFirst = true;
+            //wf.StopOnFirst = true;
             var disp = wf.Output.Subscribe(file =>
             {
                 Debug.WriteLine($"{ file.EventArgs.Name} has {file.EventArgs.ChangeType.ToString()}");
-                cts.Cancel();
+                cts.Cancel();//stop on first
             }, () =>
             {
                 //System.Environment.Exit(1);
@@ -106,6 +106,7 @@ namespace WeETL.Tests
                 File.AppendAllLines(filename, new string[] { ETLString.GetAsciiRandomString(50) });
                 Debug.WriteLine($"{filename} modified");
                 Assert.IsTrue(true, "Test passed");
+                cts.Cancel();
             });
             var checker = Task.Delay(3000).ContinueWith(t =>
             {

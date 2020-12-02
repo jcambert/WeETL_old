@@ -11,16 +11,16 @@ namespace WeETL
 {
     public interface IJob : IDisposable, IStartable
     {
-       // public string Name { get;  }
+        // public string Name { get;  }
     }
-    public class Job :ETLWatchable<Job>, IJob
+    public class Job : ETLWatchable<Job>, IJob
     {
         #region private vars
         private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         private readonly Stopwatch watcher = new Stopwatch();
-        private  List<IStartable> _jobs = new List<IStartable>();
+        private List<IStartable> _jobs = new List<IStartable>();
         private List<ETLCoreComponent> _components = new List<ETLCoreComponent>();
-        
+
         #endregion
 
         #region ctor
@@ -35,7 +35,7 @@ namespace WeETL
         #endregion
 
         #region public methods
-        public  dynamic Bag(string name) => Context.Bags[name];
+        public dynamic Bag(string name) => Context.Bags[name];
         public void Add(IStartable startable)
         {
             _jobs.Add(startable);
@@ -58,27 +58,38 @@ namespace WeETL
 #endif
             _components.Add(component);
         }
-        public async Task Start(CancellationToken token)
+        public Task Start(CancellationToken token)
         {
-            StartHandler.OnNext((this,DateTime.Now));
-            
-            while (_jobs.Count > 0 ||_components.Where(c=>!c.IsCompleted).Any())
+            StartHandler.OnNext((this, DateTime.Now));
+            return Task.Run(async () =>
             {
-                await Task.Run(() => Task.WhenAll(_jobs.Where(j=>!j.IsRunning).Select(j => j.Start(token))), token);
-                _jobs = _jobs.Where(t => !t.IsCompleted).ToList();
-                Thread.Sleep(100);
-            }
-            CompletedHandler.OnNext((this, DateTime.Now));
+                int jobsCount = _jobs.Count;
+                var activeComponents = _components.Where(c => !c.IsCompleted).ToList();
+                while (jobsCount > 0 || activeComponents.Any())
+                {
+                    await Task.Run(() => Task.WhenAll(_jobs.Where(j => !j.IsRunning).Select(j => j.Start(token))), token);
+                    _jobs = _jobs.Where(t => !t.IsCompleted).ToList();
+                    Thread.Sleep(100);
+                    jobsCount = _jobs.Count;
+                    activeComponents = _components.Where(c => !c.IsCompleted).ToList();
+                }
+            }).ContinueWith(t =>
+            {
+
+                CompletedHandler.OnNext((this, DateTime.Now));
+            });
+
+
 
         }
         public Task Start() => Start(tokenSource.Token);
-        public void Stop()=>tokenSource.Cancel();
-        
+        public void Stop() => tokenSource.Cancel();
+        public CancellationTokenSource TokenSource => tokenSource;
         #endregion
 
         #region public properties
 
-        public ETLContext Context { get;  }
+        public ETLContext Context { get; }
 
         public bool IsCancellationRequested => tokenSource.IsCancellationRequested;
 

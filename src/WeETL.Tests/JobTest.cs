@@ -28,10 +28,10 @@ namespace WeETL.Tests
         ETLContext ctx;
         Job job;
         TestScheduler scheduler;
-        private async Task Start()
+        private  Task Start()
         {
             scheduler.Start();
-            await job.Start();
+            return job.Start();
 
         }
 
@@ -105,9 +105,10 @@ namespace WeETL.Tests
             liste.AddToJob(job);
             var dbg = new DebugObserver<FilenameSchema>(nameof(TestTFileList));
             liste.OnOutput.SubscribeOn(scheduler).Subscribe(dbg);
-            scheduler.Start();
-            await job.Start();
+            
+            await Start();
         }
+       
         [DataTestMethod]
         [DataRow(true, 10, false)]
         [DataRow(false, 10, false)]
