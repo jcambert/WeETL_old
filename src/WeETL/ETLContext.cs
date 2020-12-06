@@ -10,6 +10,8 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WeETL.Core;
+using WeETL.Observables.BySpeed;
+
 namespace WeETL
 {
     public class ETLContext

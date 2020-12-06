@@ -3,7 +3,11 @@ using System.Diagnostics;
 
 namespace WeETL.Observers
 {
-    public class DebugObserver<T> : IObserver<T>
+    public interface IDebugObserver<T> : IObserver<T>
+    {
+
+    }
+    public class DebugObserver<T> : IDebugObserver<T>
     {
         private readonly string _name;
         public DebugObserver(string name = "")

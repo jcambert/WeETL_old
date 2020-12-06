@@ -5,7 +5,12 @@ using WeETL.Utilities;
 
 namespace WeETL.Observables
 {
-    public abstract class AbstractObservable<T> : IObservable<T>
+
+    public interface ICommonObservable<T> : IObservable<T>
+    {
+        IObservable<T> Output { get;  }
+    }
+    public abstract class AbstractObservable<T> : ICommonObservable<T>
     {
         
       

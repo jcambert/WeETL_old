@@ -16,6 +16,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using WeETL.Core;
+using WeETL.Observables;
+using WeETL.Observers;
 
 namespace WeETL
 {
@@ -42,6 +44,14 @@ namespace WeETL
                 // Debug.WriteLine(type.Name);
                 service.TryAddTransient(@type);
             }
+        }
+        public static IServiceCollection UseCommonUtilities(this IServiceCollection sc)
+        {
+            sc.AddTransient(typeof(IConsoleOberver<>), typeof(ConsoleObserver<>));
+            sc.AddTransient(typeof(IDebugObserver<>), typeof(DebugObserver<>));
+            
+            sc.AddTransient<IFileReadLine, FileReadLine>();
+            return sc;
         }
         public static void CreateBag(this ETLContext ctx,string name)
         {

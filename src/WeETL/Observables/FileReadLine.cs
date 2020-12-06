@@ -1,11 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Reactive.Linq;
-using System.Threading;
 
 namespace WeETL.Observables
 {
-    public class FileReadLine : AbstractObservable<string>
+    public interface IFileReadLine: ICommonObservable<string>
+    {
+        string Filename { get; set; }
+    }
+    public class FileReadLine : AbstractObservable<string>,IFileReadLine
     {
         public FileReadLine() : base()
         {
@@ -17,6 +20,7 @@ namespace WeETL.Observables
         protected override IObservable<string> CreateOutputObservable()
        => Observable.Defer(() =>
        {
+
            return Observable.Using(
                () => File.OpenText(Filename),
                stream => Observable.Generate(

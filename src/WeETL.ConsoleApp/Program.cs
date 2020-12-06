@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using System;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,9 @@ using WeEFLastic.Extensions.DependencyInjection;
 using WeETL.Components;
 using WeETL.DependencyInjection;
 using WeETL.Observables;
+using WeETL.Observables.BySpeed;
+using WeETL.Observables.Dxf;
+using WeETL.Observables.Dxf.Header;
 using WeETL.Observers;
 using WeETL.Schemas;
 
@@ -20,20 +24,39 @@ namespace WeETL.ConsoleApp
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-            WaitFile wf = new WaitFile(new WaitFileOptions() {
-                Path = @"d:\",
-                Filter = "*.txt"
-            });
-            var disp=wf.Output.Subscribe(file =>
+            ETLContext ctx = new ETLContext();
+            ctx.ConfigureService(cfg =>
             {
-                Console.WriteLine($"{ file.EventArgs.Name} has {file.EventArgs.ChangeType.ToString()}");
-            },()=> {
-                //System.Environment.Exit(1);
-                Console.WriteLine("Stop listening");
+                cfg.UseCommonUtilities();
+                cfg.UseGCommands();
+                cfg.UseDxf();
             });
-           
+            /* var prg = ctx.GetService<ILaserCutBySpeedReader>();
+             var res=await prg.Load( $@"{AppDomain.CurrentDomain.BaseDirectory}15565001.lcc");*/
 
-            Console.WriteLine($"Listening {wf.Path}");
+            var dxfReader = ctx.GetService<IDxfReader>();
+            var cons = ctx.GetService<IConsoleOberver<IDxfDocument>>();
+            dxfReader.OnLoaded.Subscribe(doc=>{
+                doc.Header.AcadVer = DxfVersion.AutoCad2018;
+                Console.WriteLine(doc.Header.ToString());
+            });
+            dxfReader.Load($@"{AppDomain.CurrentDomain.BaseDirectory}ST2018L0804.dxf");
+
+           // Console.ReadLine();
+            /* WaitFile wf = new WaitFile(new WaitFileOptions() {
+                 Path = @"d:\",
+                 Filter = "*.txt"
+             });
+             var disp=wf.Output.Subscribe(file =>
+             {
+                 Console.WriteLine($"{ file.EventArgs.Name} has {file.EventArgs.ChangeType.ToString()}");
+             },()=> {
+                 Console.WriteLine("Stop listening");
+             });
+
+
+             Console.WriteLine($"Listening {wf.Path}");*/
+
             /*RestRequest<OpenWeatherMapSchema> rest = new RestRequest<OpenWeatherMapSchema>();
             var apiVersion = "2.5";
             var city = "delle";
@@ -69,7 +92,7 @@ namespace WeETL.ConsoleApp
             // Console.WriteLine(rowgen.Generate());
             // Console.ReadKey();
             // Console.WriteLine(rowgen.Generate());
-            Console.ReadLine();
+
         }
         static async Task Covid19()
         {
@@ -109,12 +132,12 @@ namespace WeETL.ConsoleApp
 
             });
             var job = ctx.CreateJob();
-        //    var dboutuput = ctx.GetService<TOutputDb<OpenWeatherMapSchema, ObjectId>>();
+            //    var dboutuput = ctx.GetService<TOutputDb<OpenWeatherMapSchema, ObjectId>>();
             var ff = ctx.GetService<TOpenWeather>();
 
 
             ff.City = "delle";
-            ff.ApiKey = "d288da12b207992dd796241cf56014b1";      
+            ff.ApiKey = "d288da12b207992dd796241cf56014b1";
             ff.OnError.Subscribe(err => { Console.Error.WriteLine($"{err.Message}\n{err.InnerException.Message}"); });
             ff.AddToJob(job);
             //dboutuput.AddInput(job, ff.OnOutput);
@@ -171,16 +194,18 @@ namespace WeETL.ConsoleApp
             ProgrammeSchema programme = new ProgrammeSchema();
             //programme.Programme.Reunions.WithIndex(e=>e.NumeroOfficiel/* (item, index) => (item,index,item.NumeroOfficiel)*/);
             action1.AddInput(job, restProgramme.OnOutput);
-            action1.Set((Job job, ProgrammeSchema prg) => {
+            action1.Set((Job job, ProgrammeSchema prg) =>
+            {
                 dynamic bag = job.Bag(job.Id.ToString());
                 bag.Programme = prg;
             });
-            forReunion.AddIteration(job, restProgramme.OnOutput, (ProgrammeSchema prg) => prg.Programme.Reunions.Select(x=>(x,x.NumeroOfficiel)));
-            forCourse.AddIteration(job, forReunion.OnOutput, (r) => r.Item1.Courses.Select(x=>(x,r.Item2)));
+            forReunion.AddIteration(job, restProgramme.OnOutput, (ProgrammeSchema prg) => prg.Programme.Reunions.Select(x => (x, x.NumeroOfficiel)));
+            forCourse.AddIteration(job, forReunion.OnOutput, (r) => r.Item1.Courses.Select(x => (x, r.Item2)));
 
-            var action2 = new TAction<(Course,int)>();
+            var action2 = new TAction<(Course, int)>();
             action2.AddInput(job, forCourse.OnOutput);
-            action2.Set(( job,cc) => { 
+            action2.Set((job, cc) =>
+            {
                 Console.WriteLine(cc.Item1.LibelleCourt);
                 var restParticipant = ctx.GetService<TRest<ListeParticipants>>();
                 restParticipant.AddToJob(job);

@@ -5,6 +5,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Observables\Dxf\DxfGroupCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfGroupCode.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\DxfHeaderCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfHeaderCode.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Autofac" Version="6.0.0" />
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
@@ -24,6 +37,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Observables\Dxf\DxfGroupCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfGroupCode.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\DxfHeaderCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfHeaderCode.tt</DependentUpon>
+    </Compile>
     <Compile Update="Properties\AbstractionsStrings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -48,6 +71,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Observables\Dxf\DxfGroupCode.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DxfGroupCode.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\DxfHeaderCode.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DxfHeaderCode.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\Header.tt">
+      <Generator></Generator>
+    </None>
     <None Update="Properties\AbstractionsStrings.Designer.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AbstractionsStrings.Designer.cs</LastGenOutput>
