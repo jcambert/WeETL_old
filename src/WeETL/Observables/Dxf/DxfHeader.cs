@@ -77,10 +77,7 @@ namespace WeETL.Observables.Dxf
         }
         public override string ToString()
         {
-#if DEBUG
-          //  if ( Name == "$INSBASE" && Debugger.IsAttached)
-          //      Debugger.Break();
-#endif
+
             var res = $"{Utilities.GroupCodeVariableName}\n{Name}\n";
             for (int i = 0; i < _values.Count; i++)
             {

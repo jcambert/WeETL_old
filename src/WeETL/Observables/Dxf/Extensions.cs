@@ -1,26 +1,65 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using WeETL.Numerics;
 using WeETL.Observables.Dxf.Header;
+using WeETL.Observables.Dxf.IO;
 
 namespace WeETL.Observables.Dxf
 {
     public static class Extensions
     {
-        public static IServiceCollection  UseDxf(this IServiceCollection sc)
+        public static IServiceCollection UseDxf(this IServiceCollection sc)
         {
+
             sc.AddTransient<IDxfDocument, DxfDocument>();
-            sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.AutoCad2018);
             sc.AddTransient<IDxfHeader, DxfHeader>();
             sc.AddTransient<IDxfReader, DxfReader>();
+
+            sc.RegisterReaders();
+
+            sc.RegisterSupportedVersions();
             return sc;
         }
-        
+
+        private static void RegisterReaders(this IServiceCollection sc)
+        {
+            sc.AddTransient<IReaderFactory, ReaderFactory>();
+            var readers = typeof(IReaderFactory).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsClass && typeof(IReader).IsAssignableFrom(t)).ToList();
+            readers.ForEach(reader =>
+            {
+                sc.AddTransient(typeof(IReader), reader);
+                Console.WriteLine($"Register reader {reader.Name}");
+            });
+
+        }
+
+        private static void RegisterSupportedVersions(this IServiceCollection sc)
+        {
+            /*var versions = typeof(IDxfVersion).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsClass && typeof(IDxfVersion).IsAssignableFrom(t)).ToList();
+            versions.ForEach(reader =>
+            {
+                sc.AddTransient(typeof(IDxfVersion), reader);
+                Console.WriteLine($"Register Version {reader.Name}");
+            });
+            sc.AddSingleton(typeof(IDxfVersion), sp => sp.GetServices<IDxfVersion>().OrderBy(s=>s.Order).LastOrDefault());*/
+            sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.R10);
+            sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.R11);
+            sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.AutoCad2000);
+
+
+        }
+
         internal static bool IsVector3(this DxfHeaderValue header) =>
-           header.GroupCodes.Count==3 &&  header.GroupCodes.TrueForAll(c => c >= 10 && c <= 37);
-        
+           header.GroupCodes.Count == 3 && header.GroupCodes.TrueForAll(c => c >= 10 && c <= 37);
+
+        internal static T GetOwner<T>(this DxfObject o)
+        {
+            return default(T);
+        }
+
     }
 
     internal static class Utilities

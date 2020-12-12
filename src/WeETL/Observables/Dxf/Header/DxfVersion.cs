@@ -1,32 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using WeETL.DependencyInjection;
 using WeETL.Utilities;
 
 namespace WeETL.Observables.Dxf.Header
 {
-    public interface IDxfVersion:IComparable<IDxfVersion>,IComparer<IDxfVersion>
+    public interface IDxfVersion:IComparable<IDxfVersion>,IComparer<IDxfVersion>,INamed
     {
         int Order { get; }
-        string Version { get; }
     }
     public class DxfVersion:IDxfVersion
     {
 
         #region ctor
-        public DxfVersion(int order, string version)
+        public DxfVersion(int order, string name)
         {
-            Check.NotNull(version, nameof(Version));
-            Check.NotEmpty(version, nameof(Version));
+            Check.NotNull(name, nameof(name));
+            Check.NotEmpty(name, nameof(name));
             this.Order= order;
-            this.Version = version;
+            this.Name = name;
         }
         #endregion
         #region Properties
         public int Order { get;  }
-        public string  Version { get; }
+        public string  Name { get; }
         #endregion
         #region Methods
-        public override string ToString() => Version;
+        public override string ToString() => Name;
         
         #endregion
         #region Equality

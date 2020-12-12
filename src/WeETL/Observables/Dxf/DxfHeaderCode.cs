@@ -23,10 +23,11 @@ namespace WeETL.Observables.Dxf
 		public const string CMLScale="$CMLSCALE";
 		public const string CMLStyle="$CMLSTYLE";
 		public const string DimStyle="$DIMSTYLE";
+		public const string DwgCodePage="$DWGCODEPAGE";
 		public const string TextSize="$TEXTSIZE";
 		public const string LUnits="$LUNITS";
 		public const string LUprec="$LUPREC";
-		public const string DwgCodePage="$DWGCODEPAGE";
+		public const string MaintenanceVersion="$ACADMAINTVER";
 		public const string Extnames="$EXTNAMES";
 		public const string InsBase="$INSBASE";
 		public const string InsUnits="$INSUNITS";
@@ -64,10 +65,11 @@ namespace WeETL.Observables.Dxf
 		double CMLScale{get;set;}
 		string CMLStyle{get;set;}
 		string DimStyle{get;set;}
+		string DwgCodePage{get;set;}
 		int TextSize{get;set;}
 		int LUnits{get;set;}
 		int LUprec{get;set;}
-		string DwgCodePage{get;set;}
+		int MaintenanceVersion{get;set;}
 		int Extnames{get;set;}
 		Vector3 InsBase{get;set;}
 		int InsUnits{get;set;}
@@ -107,10 +109,11 @@ namespace WeETL.Observables.Dxf
 			Codes[DxfHeaderCode.CMLScale]=new DxfHeaderValue(DxfHeaderCode.CMLScale,40,1.0);
 			Codes[DxfHeaderCode.CMLStyle]=new DxfHeaderValue(DxfHeaderCode.CMLStyle,2,"Standard");
 			Codes[DxfHeaderCode.DimStyle]=new DxfHeaderValue(DxfHeaderCode.DimStyle,2,"STANDARD");
+			Codes[DxfHeaderCode.DwgCodePage]=new DxfHeaderValue(DxfHeaderCode.DwgCodePage,3,"ANSI_" + Encoding.ASCII.WindowsCodePage);
 			Codes[DxfHeaderCode.TextSize]=new DxfHeaderValue(DxfHeaderCode.TextSize,40,3);
 			Codes[DxfHeaderCode.LUnits]=new DxfHeaderValue(DxfHeaderCode.LUnits,70,2);
 			Codes[DxfHeaderCode.LUprec]=new DxfHeaderValue(DxfHeaderCode.LUprec,70,2);
-			Codes[DxfHeaderCode.DwgCodePage]=new DxfHeaderValue(DxfHeaderCode.DwgCodePage,3,"ANSI_" + Encoding.ASCII.WindowsCodePage);
+			Codes[DxfHeaderCode.MaintenanceVersion]=new DxfHeaderValue(DxfHeaderCode.MaintenanceVersion,70,20);
 			Codes[DxfHeaderCode.Extnames]=new DxfHeaderValue(DxfHeaderCode.Extnames,290,1);
 			Codes[DxfHeaderCode.InsBase]=new DxfHeaderValue(DxfHeaderCode.InsBase,-1,Vector3.Zero);
 			Codes[DxfHeaderCode.InsUnits]=new DxfHeaderValue(DxfHeaderCode.InsUnits,70,4);
@@ -195,6 +198,10 @@ namespace WeETL.Observables.Dxf
 			get=>Codes[DxfHeaderCode.DimStyle].Value.ToString();
 			set{Codes[DxfHeaderCode.DimStyle].Value=value;}
 		}
+		public string DwgCodePage{
+			get=>Codes[DxfHeaderCode.DwgCodePage].Value.ToString();
+			set{Codes[DxfHeaderCode.DwgCodePage].Value=value;}
+		}
 		public int TextSize{
 			get=>(int) Codes[DxfHeaderCode.TextSize].Value;
 			set{Codes[DxfHeaderCode.TextSize].Value=value;}
@@ -207,9 +214,9 @@ namespace WeETL.Observables.Dxf
 			get=>(int) Codes[DxfHeaderCode.LUprec].Value;
 			set{Codes[DxfHeaderCode.LUprec].Value=value;}
 		}
-		public string DwgCodePage{
-			get=>Codes[DxfHeaderCode.DwgCodePage].Value.ToString();
-			set{Codes[DxfHeaderCode.DwgCodePage].Value=value;}
+		public int MaintenanceVersion{
+			get=>(int) Codes[DxfHeaderCode.MaintenanceVersion].Value;
+			set{Codes[DxfHeaderCode.MaintenanceVersion].Value=value;}
 		}
 		public int Extnames{
 			get=>(int) Codes[DxfHeaderCode.Extnames].Value;
