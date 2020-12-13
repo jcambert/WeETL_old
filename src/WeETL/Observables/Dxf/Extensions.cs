@@ -44,14 +44,15 @@ namespace WeETL.Observables.Dxf
                 sc.AddTransient(typeof(IDxfVersion), reader);
                 Console.WriteLine($"Register Version {reader.Name}");
             });
-            sc.AddSingleton(typeof(IDxfVersion), sp => sp.GetServices<IDxfVersion>().OrderBy(s=>s.Order).LastOrDefault());*/
+            sc.AddSingleton(typeof(IDxfVersion), sp => );*/
             sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.R10);
             sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.R11);
             sc.AddTransient(typeof(IDxfVersion), sp => DxfVersion.AutoCad2000);
 
 
         }
-
+        internal static IDxfVersion GetLastSupported(this IServiceProvider sp) => sp.GetServices<IDxfVersion>().OrderBy(s => s.Order).LastOrDefault();
+        
         internal static bool IsVector3(this DxfHeaderValue header) =>
            header.GroupCodes.Count == 3 && header.GroupCodes.TrueForAll(c => c >= 10 && c <= 37);
 

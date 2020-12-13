@@ -26,5 +26,7 @@ namespace WeETL.DependencyInjection
             var v = services.Where(s => s.GetType().GetCustomAttributes(typeof(TAttribute), true).Where(t => (t as TAttribute).Name == name).Any());
             return v.FirstOrDefault();
         }
+
+        
     }
 }
