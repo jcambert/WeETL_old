@@ -109,6 +109,11 @@ namespace WeETL.Observables.Dxf
 		public const string DimensionNumberOfDecimalPlace="$DIMDEC";
 		public const string DimensionNumberOfDecimalPlaceToDisplayToleranceValue="$DIMTDEC";
 		public const string DimensionUnitFormatForAlternateUnit="$DIMALTU";
+		public const string DimensionNumberDecimaPlacesToleranceOfAlternateUnits="$DIMALTTD";
+		public const string DimensionTextStyle="$DIMTXSTY";
+		public const string DimensionAngleFormatForAngular="$DIMAUNIT";
+		public const string DimensionNumberPrecisionPlacesDisplayedAngular="$DIMADEC";
+		public const string DimensionRoundingAlternateUnits="$DIMALTRND";
 	}
 	public interface IDxfHeader{
 		void SetValue(string key, DxfHeaderValue value);
@@ -214,6 +219,11 @@ namespace WeETL.Observables.Dxf
 		int DimensionNumberOfDecimalPlace{get;set;}
 		int DimensionNumberOfDecimalPlaceToDisplayToleranceValue{get;set;}
 		DimensionUnitFormatForAlternateUnit DimensionUnitFormatForAlternateUnit{get;set;}
+		int DimensionNumberDecimaPlacesToleranceOfAlternateUnits{get;set;}
+		string DimensionTextStyle{get;set;}
+		AngleFormat DimensionAngleFormatForAngular{get;set;}
+		int DimensionNumberPrecisionPlacesDisplayedAngular{get;set;}
+		double DimensionRoundingAlternateUnits{get;set;}
 	
 	}
 	public partial class DxfHeader:IDxfHeader
@@ -321,6 +331,11 @@ namespace WeETL.Observables.Dxf
 			Codes[DxfHeaderCode.DimensionNumberOfDecimalPlace]=new DxfHeaderValue(DxfHeaderCode.DimensionNumberOfDecimalPlace,70,1);
 			Codes[DxfHeaderCode.DimensionNumberOfDecimalPlaceToDisplayToleranceValue]=new DxfHeaderValue(DxfHeaderCode.DimensionNumberOfDecimalPlaceToDisplayToleranceValue,70,1);
 			Codes[DxfHeaderCode.DimensionUnitFormatForAlternateUnit]=new DxfHeaderValue(DxfHeaderCode.DimensionUnitFormatForAlternateUnit,70,DimensionUnitFormatForAlternateUnit.Decimal);
+			Codes[DxfHeaderCode.DimensionNumberDecimaPlacesToleranceOfAlternateUnits]=new DxfHeaderValue(DxfHeaderCode.DimensionNumberDecimaPlacesToleranceOfAlternateUnits,70,2);
+			Codes[DxfHeaderCode.DimensionTextStyle]=new DxfHeaderValue(DxfHeaderCode.DimensionTextStyle,7,"STANDARD");
+			Codes[DxfHeaderCode.DimensionAngleFormatForAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionAngleFormatForAngular,70,AngleFormat.DecimalDegrees);
+			Codes[DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular,70,0);
+			Codes[DxfHeaderCode.DimensionRoundingAlternateUnits]=new DxfHeaderValue(DxfHeaderCode.DimensionRoundingAlternateUnits,40,0.0);
 		}
 
 		public IDxfVersion AcadVer{
@@ -730,6 +745,26 @@ namespace WeETL.Observables.Dxf
 		public DimensionUnitFormatForAlternateUnit DimensionUnitFormatForAlternateUnit{
 			get=>(DimensionUnitFormatForAlternateUnit) Codes[DxfHeaderCode.DimensionUnitFormatForAlternateUnit].Value;
 			set{Codes[DxfHeaderCode.DimensionUnitFormatForAlternateUnit].Value=value;}
+		}
+		public int DimensionNumberDecimaPlacesToleranceOfAlternateUnits{
+			get=>(int) Codes[DxfHeaderCode.DimensionNumberDecimaPlacesToleranceOfAlternateUnits].Value;
+			set{Codes[DxfHeaderCode.DimensionNumberDecimaPlacesToleranceOfAlternateUnits].Value=value;}
+		}
+		public string DimensionTextStyle{
+			get=>Codes[DxfHeaderCode.DimensionTextStyle].Value.ToString();
+			set{Codes[DxfHeaderCode.DimensionTextStyle].Value=value;}
+		}
+		public AngleFormat DimensionAngleFormatForAngular{
+			get=>(AngleFormat) Codes[DxfHeaderCode.DimensionAngleFormatForAngular].Value;
+			set{Codes[DxfHeaderCode.DimensionAngleFormatForAngular].Value=value;}
+		}
+		public int DimensionNumberPrecisionPlacesDisplayedAngular{
+			get=>(int) Codes[DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular].Value;
+			set{Codes[DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular].Value=value;}
+		}
+		public double DimensionRoundingAlternateUnits{
+			get=>(double) Codes[DxfHeaderCode.DimensionRoundingAlternateUnits].Value;
+			set{Codes[DxfHeaderCode.DimensionRoundingAlternateUnits].Value=value;}
 		}
 	}
 }

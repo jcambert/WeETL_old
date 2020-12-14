@@ -1,11 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using WeETL.DependencyInjection;
 using WeETL.Numerics;
 using WeETL.Observables.Dxf.Header;
@@ -1251,6 +1245,66 @@ namespace WeETL.Observables.Dxf.IO
         public override void Read((int, string) code)
         {
             ReadInt(code.Item2, result => Document.Header.DimensionUnitFormatForAlternateUnit =(DimensionUnitFormatForAlternateUnit) result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionNumberDecimaPlacesToleranceOfAlternateUnits)]
+    internal class HeaderSectionDimensionNumberDecimaPlacesToleranceOfAlternateUnitsReader : AbstractReader
+    {
+        public HeaderSectionDimensionNumberDecimaPlacesToleranceOfAlternateUnitsReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionNumberDecimaPlacesToleranceOfAlternateUnits = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionTextStyle)]
+    internal class HeaderSectionDimensionTextStyleReader : AbstractReader
+    {
+        public HeaderSectionDimensionTextStyleReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadString(code.Item2, result => Document.Header.DimensionTextStyle = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionAngleFormatForAngular)]
+    internal class HeaderSectionDimensionAngleFormatForAngularReader : AbstractReader
+    {
+        public HeaderSectionDimensionAngleFormatForAngularReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionAngleFormatForAngular = (AngleFormat) result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular)]
+    internal class HeaderSectionDimensionNumberPrecisionPlacesDisplayedAngularReader : AbstractReader
+    {
+        public HeaderSectionDimensionNumberPrecisionPlacesDisplayedAngularReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionNumberPrecisionPlacesDisplayedAngular = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionRoundingAlternateUnits)]
+    internal class HeaderSectionDimensionRoundingAlternateUnitsReader : AbstractReader
+    {
+        public HeaderSectionDimensionRoundingAlternateUnitsReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadDouble(code.Item2, result => Document.Header.DimensionRoundingAlternateUnits = result);
         }
     }
     
