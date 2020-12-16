@@ -46,7 +46,7 @@ namespace WeETL.Observables.Dxf.IO
         static Action<DxfObject, string> ReadOwner = (line, value) => { line.Owner = value; };
         Action<DxfObject, string> fn;
         int _currentCode = -1;
-
+        public const string NOT_HANDLED = "NotHandled";
         #region ctor
         public AbstractReader(IServiceProvider serviceProvider)
         {
@@ -167,7 +167,7 @@ namespace WeETL.Observables.Dxf.IO
             return dtDateTime;
         }
     }
-
+    
     internal abstract class AbstractVector2Reader : AbstractReader
     {
         double x, y;

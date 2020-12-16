@@ -4,6 +4,7 @@ using WeETL.Numerics;
 using System.Text;
 using WeETL.Observables.Dxf.Header;
 using WeETL.Observables.Dxf.Units;
+using WeETL.Observables.Dxf.IO;
 namespace WeETL.Observables.Dxf
 {
 	public static class DxfHeaderCode{
@@ -114,6 +115,12 @@ namespace WeETL.Observables.Dxf
 		public const string DimensionAngleFormatForAngular="$DIMAUNIT";
 		public const string DimensionNumberPrecisionPlacesDisplayedAngular="$DIMADEC";
 		public const string DimensionRoundingAlternateUnits="$DIMALTRND";
+		public const string DimensionControlZeroForAngular="$DIMAZIN";
+		public const string DimensionSingleCharacterDecimalSeparator="$DIMDSEP";
+		public const string DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient="$DIMATFIT";
+		public const string DIMFRAC="$DIMFRAC";
+		public const string DimensionArrowBlockNameForLeaders="$DIMLDRBLK";
+		public const string DimensionUnitsExceptAngular="$DIMLUNIT";
 	}
 	public interface IDxfHeader{
 		void SetValue(string key, DxfHeaderValue value);
@@ -224,6 +231,11 @@ namespace WeETL.Observables.Dxf
 		AngleFormat DimensionAngleFormatForAngular{get;set;}
 		int DimensionNumberPrecisionPlacesDisplayedAngular{get;set;}
 		double DimensionRoundingAlternateUnits{get;set;}
+		DimensionControlZeroForAngular DimensionControlZeroForAngular{get;set;}
+		int DimensionSingleCharacterDecimalSeparator{get;set;}
+		int DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient{get;set;}
+		string DimensionArrowBlockNameForLeaders{get;set;}
+		GeneralUnit DimensionUnitsExceptAngular{get;set;}
 	
 	}
 	public partial class DxfHeader:IDxfHeader
@@ -336,6 +348,11 @@ namespace WeETL.Observables.Dxf
 			Codes[DxfHeaderCode.DimensionAngleFormatForAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionAngleFormatForAngular,70,AngleFormat.DecimalDegrees);
 			Codes[DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionNumberPrecisionPlacesDisplayedAngular,70,0);
 			Codes[DxfHeaderCode.DimensionRoundingAlternateUnits]=new DxfHeaderValue(DxfHeaderCode.DimensionRoundingAlternateUnits,40,0.0);
+			Codes[DxfHeaderCode.DimensionControlZeroForAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionControlZeroForAngular,70,DimensionControlZeroForAngular.DisplaysAllLeadingAndTrailingZeros);
+			Codes[DxfHeaderCode.DimensionSingleCharacterDecimalSeparator]=new DxfHeaderValue(DxfHeaderCode.DimensionSingleCharacterDecimalSeparator,70,30);
+			Codes[DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient]=new DxfHeaderValue(DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient,70,3);
+			Codes[DxfHeaderCode.DimensionArrowBlockNameForLeaders]=new DxfHeaderValue(DxfHeaderCode.DimensionArrowBlockNameForLeaders,1,"");
+			Codes[DxfHeaderCode.DimensionUnitsExceptAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionUnitsExceptAngular,1,GeneralUnit.Decimal);
 		}
 
 		public IDxfVersion AcadVer{
@@ -766,7 +783,39 @@ namespace WeETL.Observables.Dxf
 			get=>(double) Codes[DxfHeaderCode.DimensionRoundingAlternateUnits].Value;
 			set{Codes[DxfHeaderCode.DimensionRoundingAlternateUnits].Value=value;}
 		}
+		public DimensionControlZeroForAngular DimensionControlZeroForAngular{
+			get=>(DimensionControlZeroForAngular) Codes[DxfHeaderCode.DimensionControlZeroForAngular].Value;
+			set{Codes[DxfHeaderCode.DimensionControlZeroForAngular].Value=value;}
+		}
+		public int DimensionSingleCharacterDecimalSeparator{
+			get=>(int) Codes[DxfHeaderCode.DimensionSingleCharacterDecimalSeparator].Value;
+			set{Codes[DxfHeaderCode.DimensionSingleCharacterDecimalSeparator].Value=value;}
+		}
+		public int DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient{
+			get=>(int) Codes[DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient].Value;
+			set{Codes[DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient].Value=value;}
+		}
+		public string DimensionArrowBlockNameForLeaders{
+			get=>Codes[DxfHeaderCode.DimensionArrowBlockNameForLeaders].Value.ToString();
+			set{Codes[DxfHeaderCode.DimensionArrowBlockNameForLeaders].Value=value;}
+		}
+		public GeneralUnit DimensionUnitsExceptAngular{
+			get=>(GeneralUnit) Codes[DxfHeaderCode.DimensionUnitsExceptAngular].Value;
+			set{Codes[DxfHeaderCode.DimensionUnitsExceptAngular].Value=value;}
+		}
 	}
+
+	[DxfEntityType(DxfHeaderCode.DIMFRAC)]
+	internal class NotHandled : AbstractReader
+    {
+        public NotHandled(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+        public override void Read((int, string) code)
+        {
+            
+        }
+    }
 }
 
 

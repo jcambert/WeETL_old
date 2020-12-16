@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -18,13 +19,17 @@ using WeETL.Schemas;
 
 namespace WeETL.ConsoleApp
 {
+    
     class Program
     {
+
 #pragma warning disable CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-            ETLContext ctx = new ETLContext();
+  
+
+                ETLContext ctx = new ETLContext();
             ctx.ConfigureService(cfg =>
             {
                 cfg.UseCommonUtilities();
@@ -36,13 +41,14 @@ namespace WeETL.ConsoleApp
 
             var dxfReader = ctx.GetService<IDxfReader>();
             var cons = ctx.GetService<IConsoleOberver<IDxfDocument>>();
-            dxfReader.OnLoaded.Subscribe(doc=>{
+            dxfReader.OnLoaded.Subscribe(doc =>
+            {
                 doc.Header.AcadVer = DxfVersion.AutoCad2018;
                 Console.WriteLine(doc.Header.ToString());
             });
             dxfReader.Load($@"{AppDomain.CurrentDomain.BaseDirectory}ST2018L0804.dxf");
 
-           // Console.ReadLine();
+            // Console.ReadLine();
             /* WaitFile wf = new WaitFile(new WaitFileOptions() {
                  Path = @"d:\",
                  Filter = "*.txt"

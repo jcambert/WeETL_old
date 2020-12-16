@@ -1307,5 +1307,67 @@ namespace WeETL.Observables.Dxf.IO
             ReadDouble(code.Item2, result => Document.Header.DimensionRoundingAlternateUnits = result);
         }
     }
+    [DxfEntityType(DxfHeaderCode.DimensionControlZeroForAngular)]
+    internal class HeaderSectionDimensionControlZeroForAngularReader : AbstractReader
+    {
+        public HeaderSectionDimensionControlZeroForAngularReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionControlZeroForAngular = (DimensionControlZeroForAngular) result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionSingleCharacterDecimalSeparator)]
+    internal class HeaderSectionDimensionSingleCharacterDecimalSeparatorReader : AbstractReader
+    {
+        public HeaderSectionDimensionSingleCharacterDecimalSeparatorReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionSingleCharacterDecimalSeparator = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient)]
+    internal class HeaderSectionDimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficientReader : AbstractReader
+    {
+        public HeaderSectionDimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficientReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionArrowBlockNameForLeaders)]
+    internal class HeaderSectionDimensionArrowBlockNameForLeadersReader : AbstractReader
+    {
+        public HeaderSectionDimensionArrowBlockNameForLeadersReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadString(code.Item2, result => Document.Header.DimensionArrowBlockNameForLeaders = result);
+        }
+    }
+    [DxfEntityType(DxfHeaderCode.DimensionUnitsExceptAngular)]
+    internal class HeaderSectionDimensionUnitsExceptAngularReader : AbstractReader
+    {
+        public HeaderSectionDimensionUnitsExceptAngularReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        public override void Read((int, string) code)
+        {
+            ReadInt(code.Item2, result => Document.Header.DimensionUnitsExceptAngular = (GeneralUnit) result);
+        }
+    }
+
     
+
 }

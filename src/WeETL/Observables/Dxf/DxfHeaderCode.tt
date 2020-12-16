@@ -46,7 +46,6 @@ Dictionary<string, Header> codes = new Dictionary<string, Header>() {
 {"UcsOrg",new Header(-1,"UCSORG","Vector3.Zero")},
 {"UcsXDir",new Header(-1,"UCSXDIR","Vector3.UnitX")},
 {"UcsYDir",new Header(-1,"UCSYDIR","Vector3.UnitY")},
-
 {"ExtMin",new Header(-1,"EXTMIN","Vector3.Zero")},
 {"ExtMax",new Header(-1,"EXTMAX","Vector3.Zero")},
 {"LimMin",new Header(-1,"LIMMIN","Vector2.Zero")},
@@ -114,7 +113,17 @@ Dictionary<string, Header> codes = new Dictionary<string, Header>() {
 {"DimensionTextStyle",new Header(7,"DIMTXSTY","\"STANDARD\"")},
 {"DimensionAngleFormatForAngular",new Header(70,"DIMAUNIT","AngleFormat.DecimalDegrees")},
 {"DimensionNumberPrecisionPlacesDisplayedAngular",new Header(70,"DIMADEC","0")},
-{"DimensionRoundingAlternateUnits",new Header(40,"DIMALTRND","0.0")}/*,
+{"DimensionRoundingAlternateUnits",new Header(40,"DIMALTRND","0.0")},
+{"DimensionControlZeroForAngular",new Header(70,"DIMAZIN","DimensionControlZeroForAngular.DisplaysAllLeadingAndTrailingZeros")},
+{"DimensionSingleCharacterDecimalSeparator",new Header(70,"DIMDSEP","30")},
+{"DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient",new Header(70,"DIMATFIT","3")},
+{"DIMFRAC",new Header("DIMFRAC")},
+{"DimensionArrowBlockNameForLeaders",new Header(1,"DIMLDRBLK","\"\"")},
+{"DimensionUnitsExceptAngular",new Header(1,"DIMLUNIT","GeneralUnit.Decimal")}/*,
+{"",new Header(,"","")},
+{"",new Header(,"","")},
+{"",new Header(,"","")},
+{"",new Header(,"","")},
 {"",new Header(,"","")},
 {"",new Header(,"","")},
 {"",new Header(,"","")},
@@ -124,13 +133,16 @@ Dictionary<string, Header> codes = new Dictionary<string, Header>() {
 {"",new Header(,"","")},
 
 */
+};
+bool hasUnhandled=codes.Values.Any(value=>!value.IsHandled);
 
-};#>
+#>
 using System;
 using WeETL.Numerics;
 using System.Text;
 using WeETL.Observables.Dxf.Header;
 using WeETL.Observables.Dxf.Units;
+using WeETL.Observables.Dxf.IO;
 namespace WeETL.Observables.Dxf
 {
 	public static class DxfHeaderCode{
@@ -140,25 +152,43 @@ namespace WeETL.Observables.Dxf
 	}
 	public interface IDxfHeader{
 		void SetValue(string key, DxfHeaderValue value);
-<#foreach(var key in codes.Keys){#>
+<#foreach(var key in codes.Keys){
+if(codes[key].IsHandled){#>
 		<#=codes[key].GetRealType()#> <#=key#>{get;set;}
-<#}#>	
+<#}}#>	
 	}
 	public partial class DxfHeader:IDxfHeader
     {
 		private void Initialize(){
-<#foreach (var key in codes.Keys){#>
+<#foreach (var key in codes.Keys){
+if(codes[key].IsHandled){#>
 			Codes[DxfHeaderCode.<#=key#>]=new DxfHeaderValue(DxfHeaderCode.<#=key#>,<#=codes[key].Group#>,<#=codes[key].Value#>);
-<#}#>
+<#}}#>
 		}
 
-<#foreach(var key in codes.Keys){#>
+<#foreach(var key in codes.Keys){
+if(codes[key].IsHandled){
+#>
 		public <#=codes[key].GetRealType()#> <#=key#>{
 			get=><#=codes[key].GetGetProperty(key)#>;
 			set{Codes[DxfHeaderCode.<#=key#>].Value=value;}
 		}
-<#}#>
+<#}}#>
 	}
+
+	<#if(hasUnhandled){
+	foreach(var code in codes.Where(c=>!c.Value.IsHandled)){
+		#>[DxfEntityType(DxfHeaderCode.<#=code.Key#>)]
+	<#}}#>internal class NotHandled : AbstractReader
+    {
+        public NotHandled(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+        public override void Read((int, string) code)
+        {
+            
+        }
+    }
 }
 
 

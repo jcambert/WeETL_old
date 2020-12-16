@@ -7,14 +7,15 @@
 <#+
 public class Header{
 	private readonly Regex regType = new Regex(@"new (?<realType>\w*)\(.*\)");
-	public Header(int group,string name,string value)=>(Group,Name,Value)=(group,name,value);
-	public Header(int group,string name,string value,string type)=>(Group,Name,Value,Type)=(group,name,value,type);
+	public Header(int group,string name,string value)=>(Group,Name,Value,IsHandled)=(group,name,value,true);
+	public Header(int group,string name,string value,string type)=>(Group,Name,Value,Type,IsHandled)=(group,name,value,type,true);
+	public Header(string name)=>(Name,IsHandled)=(name,false);
 	public int Group{get;}
 	public string Name{get;}
 	public string Value{get;}
 	public string Type{ get;}
 	public string Condition{get;}
-	
+	public bool IsHandled{get;}
 	//private List<string> baseTypes=new List<string>(){"byte",};
 	public string GetRealType(){
 		if(!string.IsNullOrEmpty(Type))return Type;
