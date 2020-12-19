@@ -1,0 +1,66 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+Dictionary<string,Entity> codes=new Dictionary<string,Entity>(){
+	{"EntityObject",new Entity()},
+	{"Face3d",new Entity(0,"3DFACE")},
+	{"Solid3d",new Entity(0,"SOLID3D")},
+	{"AcadProxyEntity",new Entity(0,"ACAD_PROXY_ENTITY")},
+	{"Arc",new Entity(0,"ARC")},
+	{"AttributeDefinition",new Entity(0,"ATTDEF")},
+	{"Attrib",new Entity(0,"ATTRIB")},
+	{"Body",new Entity(0,"BODY")},
+	{"Circle",new Entity(0,"CIRCLE")},
+	{"Dimension",new Entity(0,"DIMENSION")},
+	{"Ellipse",new Entity(0,"ELLIPSE")},
+	{"Hatch",new Entity(0,"HATCH")},
+	{"Helix",new Entity(0,"HELIX")},
+	{"Image",new Entity(0,"IMAGE")},
+	{"Insert",new Entity(0,"INSERT")},
+	{"Leader",new Entity(0,"LEADER")},
+	{"Light",new Entity(0,"LIGHT")},
+	{"Line",new Entity(0,"LINE")},
+	{"LwPolyline",new Entity(0,"LWPOLYLINE")},
+	{"Mesh",new Entity(0,"MESH")},
+	{"MultiLine",new Entity(0,"MLINE")},
+	{"MultiLeader",new Entity(0,"MULTILEADER")},
+	{"MultiLeaderStyle",new Entity(0,"MLEADERSTYLE")},
+	{"MultiText",new Entity(0,"MTEXT")},
+	{"OleFrame",new Entity(0,"OLEFRAME")},
+	{"Ole2Frame",new Entity(0,"OLE2FRAME")},
+	{"Point",new Entity(0,"POINT")},
+	{"PolyLine",new Entity(0,"POLYLINE")},
+	{"Ray",new Entity(0,"RAY")},
+	{"Region",new Entity(0,"REGION")},
+	{"Section",new Entity(0,"SECTION")},
+	{"EndSection",new Entity(0,"SEQEND")},
+	{"Shape",new Entity(0,"SHAPE")},
+	{"Solid",new Entity(0,"SOLID")},
+	{"Spline",new Entity(0,"SPLINE")},
+	{"Sun",new Entity(0,"SUN")},
+	{"Surface",new Entity(0,"SURFACE")},
+	{"Table",new Entity(0,"TABLE")},
+	{"Text",new Entity(0,"TEXT")},
+	{"Tolerance",new Entity(0,"TOLERANCE")},
+	{"Trace",new Entity(0,"TRACE")},
+	{"Underlay",new Entity(0,"UNDERLAY")},
+	{"Vertex",new Entity(0,"VERTEX")},
+	{"ViewPort",new Entity(0,"VIEWPORT")},
+	{"WipeOut",new Entity(0,"WIPEOUT")},
+	{"XLine",new Entity(0,"XLINE")}
+};
+#>
+<#+
+public class Entity{
+	public Entity()=>(Group,Name,IsHandled,IsHeadClass)=(-1,string.Empty,false,true);
+	public Entity(int group,string name)=>(Group,Name,IsHandled,IsHeadClass)=(group,name,true,false);
+	public Entity(int group,string name,bool isHandled)=>(Group,Name,IsHandled,IsHeadClass)=(group,name,isHandled,false);
+	public int Group{get;}
+	public string Name{get;}
+	public bool IsHandled{get;}
+	public bool IsHeadClass{get;}
+}
+#>

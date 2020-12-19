@@ -3,7 +3,7 @@ using System;
 
 namespace WeETL.Observables.Dxf.IO
 {
-    [DxfSection(DxfObjectCode.BlocksSection)]
+    [DxfSection(DxfBlockCode.BlockSection)]
     public class BlocksSectionReader : SectionReader
     {
         public BlocksSectionReader(IServiceProvider serviceProvider, ILogger<BlocksSectionReader> logger) : base(serviceProvider,logger)
@@ -11,17 +11,17 @@ namespace WeETL.Observables.Dxf.IO
         }
     }
 
-    [DxfEntityType(DxfObjectCode.Block)]
+    [DxfEntityType(DxfBlockCode.Block)]
     internal class BlocksSectionBlock : AbstractReader
     {
-        public BlocksSectionBlock(IServiceProvider serviceProvider) : base(serviceProvider)
+        public BlocksSectionBlock(IServiceProvider serviceProvider, ILogger<BlocksSectionBlock> logger) : base(serviceProvider,logger)
         {
         }
     }
-    [DxfEntityType(DxfObjectCode.EndBlock)]
+    [DxfEntityType(DxfBlockCode.EndBlock)]
     internal class BlocksSectionEndBlock : AbstractReader
     {
-        public BlocksSectionEndBlock(IServiceProvider serviceProvider) : base(serviceProvider)
+        public BlocksSectionEndBlock(IServiceProvider serviceProvider, ILogger<BlocksSectionEndBlock> logger) : base(serviceProvider,logger)
         {
         }
     }

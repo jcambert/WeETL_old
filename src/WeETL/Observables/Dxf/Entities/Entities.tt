@@ -1,0 +1,49 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#@ include file=".\..\Templates\Sections\Entity.tt"#>
+<#@ include file=".\..\Templates\Entities\Properties.tt"#>
+<#@ include file=".\..\Templates\GroupCodeValueType.tt"#>
+using System;
+using WeETL.Numerics;
+
+namespace WeETL.Observables.Dxf.Entities
+{
+<#
+var propCache=new PropertyCache();
+foreach(var code in codes.OrderBy(c=>c.Value.Group )){
+var isAbstract=code.Value.IsHeadClass?"abstract":"";
+var inheritFrom=code.Key=="EntityObject"?"":":EntityObject";
+#>
+	public <#=isAbstract#> partial class <#=code.Key#><#=inheritFrom#>{
+        #region properties
+<#if(properties.ContainsKey(code.Key)){
+foreach(var p in properties[code.Key].Where(p=>p.ImplementInEntity)){
+var gpCode=groupCodeValueTypes.Where(g=>g.From<=p.Code && g.To>=p.Code).FirstOrDefault();
+if(p.Name.Contains(".") && !(propCache.Contains(code.Key,p.Name.Split('.')[0],true))){#>
+        public <#=p.InternalType#> <#=p.Name.Split('.')[0]#>{get;set;}
+<#
+}else if(!p.Name.Contains(".") && !propCache.Contains(code.Key,p.Name,true)){#>
+        public <#=gpCode.Type#> <#=p.Name#>{get;set;}
+<#}#>
+<#}}#>
+        #endregion
+<#if(!code.Value.IsHeadClass){#>
+        #region overrides
+        public override string CodeName { get; }= DxfEntityCode.<#=code.Key#> ;
+	    public override object Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+<#}#>
+	}
+<#}#>
+}

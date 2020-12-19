@@ -18,13 +18,14 @@ namespace WeETL.Observables.Dxf
         internal readonly ObservableDictionary<string, DxfObject> AddedObjects=new ObservableDictionary<string, DxfObject>();
         #endregion
         #region ctor
-        public DxfDocument(IDxfHeader header):base(DxfObjectCode.Document)
+        public DxfDocument(IDxfHeader header):base()
         {
             this.Header = header;
         }
         #endregion
         #region public propreties
         public IDxfHeader Header { get; }
+        public override string CodeName => DxfDocumentCode.Document;
         #endregion
         #region internal properties
         #region internal properties
@@ -41,6 +42,8 @@ namespace WeETL.Observables.Dxf
                 _numHandles = value;
             }
         }
+
+        
 
         #endregion
         #endregion

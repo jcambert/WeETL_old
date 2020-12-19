@@ -1,0 +1,132 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Globalization" #>
+<#@ output extension=".cs" #>
+<#@ include file=".\..\Templates\GroupCodeValueType.tt"#>
+<#@ include file=".\..\Templates\Entities\Properties.tt"#>
+<#TextInfo ti = CultureInfo.CurrentCulture.TextInfo;#>
+using System;
+using WeETL.Observables.Dxf.Units;
+using WeETL.Observables.Dxf.Entities;
+using System.Globalization;
+namespace WeETL.Observables.Dxf.IO
+{
+    internal static class Utilities
+    {
+     internal static bool ReadString(string value, Action<string> onset)
+        {
+            if (value != null)
+            {
+                onset?.Invoke(value);
+                return true;
+            }
+            return false;
+        }
+
+        internal static bool ReadDouble(string value, Action<double> onset)
+        {
+            if (double.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(result);
+                return true;
+            }
+            return false;
+        }
+        internal static bool ReadInt(string value, Action<int> onset)
+        {
+            if (int.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(result);
+                return true;
+            }
+            return false;
+        }
+        internal static bool ReadOnOff(string value, Action<OnOff> onset)
+        {
+            if (int.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(result > 1 ? OnOff.ON : OnOff.OFF);
+                return true;
+            }
+            return false;
+        }
+        internal static bool ReadShort(string value, Action<short> onset)
+        {
+            if (short.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(result);
+                return true;
+            }
+            return false;
+        }
+        internal static bool ReadByte(string value, Action<byte> onset)
+        {
+            if (byte.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(result);
+                return true;
+            }
+            return false;
+        }
+        internal static bool ReadTimeSpan(string value, Action<TimeSpan> onset)
+        {
+            if (double.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                onset?.Invoke(TimeSpan.FromHours(result));
+                return true;
+            }
+            return false;
+        }
+
+        internal static  bool ReadDateTime(string value, Action<DateTime> onset)
+        {
+            double res = 0.0;
+            if (!ReadDouble(value, result => res = result))
+            {
+                return false;
+            }
+            try
+            {
+                onset?.Invoke(JulianToDateTime(res));
+                return true;
+            }
+            catch
+            {
+
+                return false;
+            }
+        }
+        static DateTime JulianToDateTime(double julianDate)
+        {
+            double unixTime = (julianDate - 2440587.5) * 86400;
+
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTime).ToLocalTime();
+
+            return dtDateTime;
+        }
+<#foreach(var entitiesProperty in properties){
+foreach(var p in entitiesProperty.Value){#>
+<#  var gpCode=groupCodeValueTypes.Where(g=>g.From<=p.Code && g.To>=p.Code).FirstOrDefault();
+    if(gpCode!=null){
+#>
+    internal static Action<<#=entitiesProperty.Key#>,string> Read<#=p.Name.Replace(".","")#>=(o,value)=>{
+    <#if(p.Name.Contains(".")){#>
+        var <#=p.Name.Split('.')[0].ToLower()#> = o.<#=p.Name.Split('.')[0]#>;
+        Read<#=ti.ToTitleCase(gpCode.Type)#>(value, value => <#=p.Name.Split('.')[0].ToLower()#>.<#=p.Name.Split('.')[1]#> = value);
+        o.<#=p.Name.Split('.')[0]#> = <#=p.Name.Split('.')[0].ToLower()#>;
+    <#}else{#>
+        Read<#=ti.ToTitleCase(gpCode.Type)#>(value,value=>o.<#=p.Name#>=value );
+    <#}#>
+    };
+    <# 
+    }else{
+    #>//CANNOT FIND GROUP CODE IN GroupCodeValueTypes <#=entitiesProperty.Key #>-<#=p.Code#><#
+    }
+#>
+<#}}#>
+    }
+}

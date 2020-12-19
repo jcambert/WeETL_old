@@ -5,9 +5,11 @@ using System.Text;
 using WeETL.Observables.Dxf.Header;
 using WeETL.Observables.Dxf.Units;
 using WeETL.Observables.Dxf.IO;
+using Microsoft.Extensions.Logging;
 namespace WeETL.Observables.Dxf
 {
 	public static class DxfHeaderCode{
+		public const string HeaderSection="HEADER";
 		public const string AcadVer="$ACADVER";
 		public const string HandleSeed="$HANDSEED";
 		public const string Angbase="$ANGBASE";
@@ -121,6 +123,32 @@ namespace WeETL.Observables.Dxf
 		public const string DIMFRAC="$DIMFRAC";
 		public const string DimensionArrowBlockNameForLeaders="$DIMLDRBLK";
 		public const string DimensionUnitsExceptAngular="$DIMLUNIT";
+		public const string DimensionLineWeight="$DIMLWD";
+		public const string DimensionExtensionLineWeight="$DIMLWE";
+		public const string DimensionTextMovementRule="$DIMTMOVE";
+		public const string SketchRecordIncrement="$SKETCHINC";
+		public const string FilletRadius="$FILLETRAD";
+		public const string NameOfMenuFile="$MENU";
+		public const string CurrentElevation="$ELEVATION";
+		public const string CurrentPaperSpaceElevation="$PELEVATION";
+		public const string CurrentThicknessSetByElevation="$THICKNESS";
+		public const string NonzeroIfLimitsCheckingIsOn="$LIMCHECK";
+		public const string FirstChamferDistance="$CHAMFERA";
+		public const string SecondChamferDistance="$CHAMFERB";
+		public const string ChamferLength="$CHAMFERC";
+		public const string ChamferAngle="$CHAMFERD";
+		public const string SketchLineOrPloyline="$SKPOLY";
+		public const string UserElapsedTimer="$TDUSRTIMER";
+		public const string UserTimerEnabled="$USRTIMER";
+		public const string PolylineDefaultWidth="$PLINEWID";
+		public const string EnableMeshSpline="$SPLFRAME";
+		public const string SplineCurveType="$SPLINETYPE";
+		public const string SplineNumberOfLine="$SPLINESEGS";
+		public const string NumberOfMeshTabulationsInFirstFirection="$SURFTAB1";
+		public const string NumberOfMeshTabulationsInSecondFirection="$SURFTAB2";
+		public const string SurfaceTypeForSmooth="$SURFTYPE";
+		public const string SurfaceDensityInMDirection="$SURFU";
+		public const string SurfaceDensityInNDirection="$SURFV";
 	}
 	public interface IDxfHeader{
 		void SetValue(string key, DxfHeaderValue value);
@@ -236,6 +264,32 @@ namespace WeETL.Observables.Dxf
 		int DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient{get;set;}
 		string DimensionArrowBlockNameForLeaders{get;set;}
 		GeneralUnit DimensionUnitsExceptAngular{get;set;}
+		int DimensionLineWeight{get;set;}
+		int DimensionExtensionLineWeight{get;set;}
+		DimensionTextMovementRule DimensionTextMovementRule{get;set;}
+		double SketchRecordIncrement{get;set;}
+		double FilletRadius{get;set;}
+		string NameOfMenuFile{get;set;}
+		double CurrentElevation{get;set;}
+		double CurrentPaperSpaceElevation{get;set;}
+		double CurrentThicknessSetByElevation{get;set;}
+		int NonzeroIfLimitsCheckingIsOn{get;set;}
+		double FirstChamferDistance{get;set;}
+		double SecondChamferDistance{get;set;}
+		double ChamferLength{get;set;}
+		double ChamferAngle{get;set;}
+		OnOff SketchLineOrPloyline{get;set;}
+		double UserElapsedTimer{get;set;}
+		OnOff UserTimerEnabled{get;set;}
+		double PolylineDefaultWidth{get;set;}
+		OnOff EnableMeshSpline{get;set;}
+		int SplineCurveType{get;set;}
+		int SplineNumberOfLine{get;set;}
+		int NumberOfMeshTabulationsInFirstFirection{get;set;}
+		int NumberOfMeshTabulationsInSecondFirection{get;set;}
+		int SurfaceTypeForSmooth{get;set;}
+		int SurfaceDensityInMDirection{get;set;}
+		int SurfaceDensityInNDirection{get;set;}
 	
 	}
 	public partial class DxfHeader:IDxfHeader
@@ -353,6 +407,32 @@ namespace WeETL.Observables.Dxf
 			Codes[DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient]=new DxfHeaderValue(DxfHeaderCode.DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient,70,3);
 			Codes[DxfHeaderCode.DimensionArrowBlockNameForLeaders]=new DxfHeaderValue(DxfHeaderCode.DimensionArrowBlockNameForLeaders,1,"");
 			Codes[DxfHeaderCode.DimensionUnitsExceptAngular]=new DxfHeaderValue(DxfHeaderCode.DimensionUnitsExceptAngular,1,GeneralUnit.Decimal);
+			Codes[DxfHeaderCode.DimensionLineWeight]=new DxfHeaderValue(DxfHeaderCode.DimensionLineWeight,1,0);
+			Codes[DxfHeaderCode.DimensionExtensionLineWeight]=new DxfHeaderValue(DxfHeaderCode.DimensionExtensionLineWeight,1,0);
+			Codes[DxfHeaderCode.DimensionTextMovementRule]=new DxfHeaderValue(DxfHeaderCode.DimensionTextMovementRule,70,DimensionTextMovementRule.MovesTheDimensionLineWithDimensionText);
+			Codes[DxfHeaderCode.SketchRecordIncrement]=new DxfHeaderValue(DxfHeaderCode.SketchRecordIncrement,40,1.0);
+			Codes[DxfHeaderCode.FilletRadius]=new DxfHeaderValue(DxfHeaderCode.FilletRadius,40,1.0);
+			Codes[DxfHeaderCode.NameOfMenuFile]=new DxfHeaderValue(DxfHeaderCode.NameOfMenuFile,1,"");
+			Codes[DxfHeaderCode.CurrentElevation]=new DxfHeaderValue(DxfHeaderCode.CurrentElevation,40,0.0);
+			Codes[DxfHeaderCode.CurrentPaperSpaceElevation]=new DxfHeaderValue(DxfHeaderCode.CurrentPaperSpaceElevation,40,0.0);
+			Codes[DxfHeaderCode.CurrentThicknessSetByElevation]=new DxfHeaderValue(DxfHeaderCode.CurrentThicknessSetByElevation,40,0.0);
+			Codes[DxfHeaderCode.NonzeroIfLimitsCheckingIsOn]=new DxfHeaderValue(DxfHeaderCode.NonzeroIfLimitsCheckingIsOn,70,0);
+			Codes[DxfHeaderCode.FirstChamferDistance]=new DxfHeaderValue(DxfHeaderCode.FirstChamferDistance,40,0.0);
+			Codes[DxfHeaderCode.SecondChamferDistance]=new DxfHeaderValue(DxfHeaderCode.SecondChamferDistance,40,0.0);
+			Codes[DxfHeaderCode.ChamferLength]=new DxfHeaderValue(DxfHeaderCode.ChamferLength,40,0.0);
+			Codes[DxfHeaderCode.ChamferAngle]=new DxfHeaderValue(DxfHeaderCode.ChamferAngle,40,0.0);
+			Codes[DxfHeaderCode.SketchLineOrPloyline]=new DxfHeaderValue(DxfHeaderCode.SketchLineOrPloyline,70,OnOff.OFF);
+			Codes[DxfHeaderCode.UserElapsedTimer]=new DxfHeaderValue(DxfHeaderCode.UserElapsedTimer,40,0.0);
+			Codes[DxfHeaderCode.UserTimerEnabled]=new DxfHeaderValue(DxfHeaderCode.UserTimerEnabled,70,OnOff.OFF);
+			Codes[DxfHeaderCode.PolylineDefaultWidth]=new DxfHeaderValue(DxfHeaderCode.PolylineDefaultWidth,40,0.0);
+			Codes[DxfHeaderCode.EnableMeshSpline]=new DxfHeaderValue(DxfHeaderCode.EnableMeshSpline,70,OnOff.OFF);
+			Codes[DxfHeaderCode.SplineCurveType]=new DxfHeaderValue(DxfHeaderCode.SplineCurveType,70,5);
+			Codes[DxfHeaderCode.SplineNumberOfLine]=new DxfHeaderValue(DxfHeaderCode.SplineNumberOfLine,70,7);
+			Codes[DxfHeaderCode.NumberOfMeshTabulationsInFirstFirection]=new DxfHeaderValue(DxfHeaderCode.NumberOfMeshTabulationsInFirstFirection,70,5);
+			Codes[DxfHeaderCode.NumberOfMeshTabulationsInSecondFirection]=new DxfHeaderValue(DxfHeaderCode.NumberOfMeshTabulationsInSecondFirection,70,5);
+			Codes[DxfHeaderCode.SurfaceTypeForSmooth]=new DxfHeaderValue(DxfHeaderCode.SurfaceTypeForSmooth,70,6);
+			Codes[DxfHeaderCode.SurfaceDensityInMDirection]=new DxfHeaderValue(DxfHeaderCode.SurfaceDensityInMDirection,70,6);
+			Codes[DxfHeaderCode.SurfaceDensityInNDirection]=new DxfHeaderValue(DxfHeaderCode.SurfaceDensityInNDirection,70,6);
 		}
 
 		public IDxfVersion AcadVer{
@@ -803,15 +883,119 @@ namespace WeETL.Observables.Dxf
 			get=>(GeneralUnit) Codes[DxfHeaderCode.DimensionUnitsExceptAngular].Value;
 			set{Codes[DxfHeaderCode.DimensionUnitsExceptAngular].Value=value;}
 		}
+		public int DimensionLineWeight{
+			get=>(int) Codes[DxfHeaderCode.DimensionLineWeight].Value;
+			set{Codes[DxfHeaderCode.DimensionLineWeight].Value=value;}
+		}
+		public int DimensionExtensionLineWeight{
+			get=>(int) Codes[DxfHeaderCode.DimensionExtensionLineWeight].Value;
+			set{Codes[DxfHeaderCode.DimensionExtensionLineWeight].Value=value;}
+		}
+		public DimensionTextMovementRule DimensionTextMovementRule{
+			get=>(DimensionTextMovementRule) Codes[DxfHeaderCode.DimensionTextMovementRule].Value;
+			set{Codes[DxfHeaderCode.DimensionTextMovementRule].Value=value;}
+		}
+		public double SketchRecordIncrement{
+			get=>(double) Codes[DxfHeaderCode.SketchRecordIncrement].Value;
+			set{Codes[DxfHeaderCode.SketchRecordIncrement].Value=value;}
+		}
+		public double FilletRadius{
+			get=>(double) Codes[DxfHeaderCode.FilletRadius].Value;
+			set{Codes[DxfHeaderCode.FilletRadius].Value=value;}
+		}
+		public string NameOfMenuFile{
+			get=>Codes[DxfHeaderCode.NameOfMenuFile].Value.ToString();
+			set{Codes[DxfHeaderCode.NameOfMenuFile].Value=value;}
+		}
+		public double CurrentElevation{
+			get=>(double) Codes[DxfHeaderCode.CurrentElevation].Value;
+			set{Codes[DxfHeaderCode.CurrentElevation].Value=value;}
+		}
+		public double CurrentPaperSpaceElevation{
+			get=>(double) Codes[DxfHeaderCode.CurrentPaperSpaceElevation].Value;
+			set{Codes[DxfHeaderCode.CurrentPaperSpaceElevation].Value=value;}
+		}
+		public double CurrentThicknessSetByElevation{
+			get=>(double) Codes[DxfHeaderCode.CurrentThicknessSetByElevation].Value;
+			set{Codes[DxfHeaderCode.CurrentThicknessSetByElevation].Value=value;}
+		}
+		public int NonzeroIfLimitsCheckingIsOn{
+			get=>(int) Codes[DxfHeaderCode.NonzeroIfLimitsCheckingIsOn].Value;
+			set{Codes[DxfHeaderCode.NonzeroIfLimitsCheckingIsOn].Value=value;}
+		}
+		public double FirstChamferDistance{
+			get=>(double) Codes[DxfHeaderCode.FirstChamferDistance].Value;
+			set{Codes[DxfHeaderCode.FirstChamferDistance].Value=value;}
+		}
+		public double SecondChamferDistance{
+			get=>(double) Codes[DxfHeaderCode.SecondChamferDistance].Value;
+			set{Codes[DxfHeaderCode.SecondChamferDistance].Value=value;}
+		}
+		public double ChamferLength{
+			get=>(double) Codes[DxfHeaderCode.ChamferLength].Value;
+			set{Codes[DxfHeaderCode.ChamferLength].Value=value;}
+		}
+		public double ChamferAngle{
+			get=>(double) Codes[DxfHeaderCode.ChamferAngle].Value;
+			set{Codes[DxfHeaderCode.ChamferAngle].Value=value;}
+		}
+		public OnOff SketchLineOrPloyline{
+			get=>(OnOff) Codes[DxfHeaderCode.SketchLineOrPloyline].Value;
+			set{Codes[DxfHeaderCode.SketchLineOrPloyline].Value=value;}
+		}
+		public double UserElapsedTimer{
+			get=>(double) Codes[DxfHeaderCode.UserElapsedTimer].Value;
+			set{Codes[DxfHeaderCode.UserElapsedTimer].Value=value;}
+		}
+		public OnOff UserTimerEnabled{
+			get=>(OnOff) Codes[DxfHeaderCode.UserTimerEnabled].Value;
+			set{Codes[DxfHeaderCode.UserTimerEnabled].Value=value;}
+		}
+		public double PolylineDefaultWidth{
+			get=>(double) Codes[DxfHeaderCode.PolylineDefaultWidth].Value;
+			set{Codes[DxfHeaderCode.PolylineDefaultWidth].Value=value;}
+		}
+		public OnOff EnableMeshSpline{
+			get=>(OnOff) Codes[DxfHeaderCode.EnableMeshSpline].Value;
+			set{Codes[DxfHeaderCode.EnableMeshSpline].Value=value;}
+		}
+		public int SplineCurveType{
+			get=>(int) Codes[DxfHeaderCode.SplineCurveType].Value;
+			set{Codes[DxfHeaderCode.SplineCurveType].Value=value;}
+		}
+		public int SplineNumberOfLine{
+			get=>(int) Codes[DxfHeaderCode.SplineNumberOfLine].Value;
+			set{Codes[DxfHeaderCode.SplineNumberOfLine].Value=value;}
+		}
+		public int NumberOfMeshTabulationsInFirstFirection{
+			get=>(int) Codes[DxfHeaderCode.NumberOfMeshTabulationsInFirstFirection].Value;
+			set{Codes[DxfHeaderCode.NumberOfMeshTabulationsInFirstFirection].Value=value;}
+		}
+		public int NumberOfMeshTabulationsInSecondFirection{
+			get=>(int) Codes[DxfHeaderCode.NumberOfMeshTabulationsInSecondFirection].Value;
+			set{Codes[DxfHeaderCode.NumberOfMeshTabulationsInSecondFirection].Value=value;}
+		}
+		public int SurfaceTypeForSmooth{
+			get=>(int) Codes[DxfHeaderCode.SurfaceTypeForSmooth].Value;
+			set{Codes[DxfHeaderCode.SurfaceTypeForSmooth].Value=value;}
+		}
+		public int SurfaceDensityInMDirection{
+			get=>(int) Codes[DxfHeaderCode.SurfaceDensityInMDirection].Value;
+			set{Codes[DxfHeaderCode.SurfaceDensityInMDirection].Value=value;}
+		}
+		public int SurfaceDensityInNDirection{
+			get=>(int) Codes[DxfHeaderCode.SurfaceDensityInNDirection].Value;
+			set{Codes[DxfHeaderCode.SurfaceDensityInNDirection].Value=value;}
+		}
 	}
 
-	[DxfEntityType(DxfHeaderCode.DIMFRAC)]
+	[DxfHeaderType(DxfHeaderCode.DIMFRAC)]
 	internal class NotHandled : AbstractReader
     {
-        public NotHandled(IServiceProvider serviceProvider) : base(serviceProvider)
+        public NotHandled(IServiceProvider serviceProvider, ILogger<NotHandled> logger) : base(serviceProvider,logger)
         {
         }
-        public override void Read((int, string) code)
+        public override void Read<DxfBaseTypeAttribute>((int, string) code)
         {
             
         }

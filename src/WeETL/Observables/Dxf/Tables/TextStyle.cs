@@ -78,7 +78,7 @@ namespace WeETL.Observables.Dxf.Tables
         /// <param name="font">Text style font file name with full or relative path.</param>
         /// <param name="checkName">Specifies if the style name has to be checked.</param>
         internal TextStyle(string name, string font, bool checkName)
-            : base(name, DxfObjectCode.TextStyle, checkName)
+            : base(name,  checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
@@ -138,7 +138,7 @@ namespace WeETL.Observables.Dxf.Tables
         /// <param name="checkName">Specifies if the style name has to be checked.</param>
         /// <remarks>This constructor is to be use only with true type fonts.</remarks>
         internal TextStyle(string name, string fontFamily, FontStyle fontStyle, bool checkName)
-            : base(name, DxfObjectCode.TextStyle, checkName)
+            : base(name, checkName)
         {
             this.file = string.Empty;
             this.bigFont = string.Empty;
@@ -321,14 +321,16 @@ namespace WeETL.Observables.Dxf.Tables
             set { this.isUpsideDown = value; }
         }
 
+        public override string CodeName => DxfTableCode.Style;
+
         /// <summary>
         /// Gets the owner of the actual text style.
         /// </summary>
-      /*  public new TextStyles Owner
-        {
-            get { return (TextStyles)base.Owner; }
-            internal set { base.Owner = value; }
-        }*/
+        /*  public new TextStyles Owner
+          {
+              get { return (TextStyles)base.Owner; }
+              internal set { base.Owner = value; }
+          }*/
 
         #endregion
 

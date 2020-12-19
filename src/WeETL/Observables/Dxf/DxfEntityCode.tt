@@ -4,17 +4,17 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-<#@ include file=".\Templates\Sections\Object.tt"#>
+<#@ include file=".\Templates\Sections\Entity.tt"#>
 
 namespace WeETL.Observables.Dxf{
 
-	public static class DxfObjectCode{
-		public const string ObjectsSection="OBJECTS";
+	public static class DxfEntityCode{
+		public const string EntitiesSection="ENTITIES";
 <#foreach(var code in codes.OrderBy(c=>c.Key)){#>
 		/// <summary>
         /// <#=code.Key #>.
         /// </summary>
-		public const string <#=code.Key#> = "<#=code.Value #>";
+		public const string <#=code.Key#> = "<#=code.Value.Name #>";
 <#}#>
 	}
 	

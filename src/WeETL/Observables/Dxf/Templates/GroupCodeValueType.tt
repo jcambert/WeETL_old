@@ -1,0 +1,58 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+var groupCodeValueTypes=new List<GroupCodeValueType>(){
+new GroupCodeValueType(0,9,"string"),
+new GroupCodeValueType(10,39,"double"),
+new GroupCodeValueType(4,59,"double"),
+new GroupCodeValueType(60,79,"int"),
+new GroupCodeValueType(90,99,"int"),
+new GroupCodeValueType(100,"string"),
+new GroupCodeValueType(102,"string"),
+new GroupCodeValueType(105,"string"),
+new GroupCodeValueType(110,119,"double"),
+new GroupCodeValueType(120,129,"double"),
+new GroupCodeValueType(130,139,"double"),
+new GroupCodeValueType(140,149,"double"),
+new GroupCodeValueType(160,169,"int"),
+new GroupCodeValueType(210,239,"double"),
+new GroupCodeValueType(270,279,"int"),
+new GroupCodeValueType(280,289,"int"),
+new GroupCodeValueType(290,299,"bool"),
+new GroupCodeValueType(300,309,"string"),
+new GroupCodeValueType(310,319,"string"),
+new GroupCodeValueType(320,329,"string"),
+new GroupCodeValueType(330,369,"string"),
+new GroupCodeValueType(370,379,"int"),
+new GroupCodeValueType(380,389,"int"),
+new GroupCodeValueType(390,399,"string"),
+new GroupCodeValueType(400,409,"int"),
+new GroupCodeValueType(410,419,"string"),
+new GroupCodeValueType(420,429,"int"),
+new GroupCodeValueType(430,439,"string"),
+new GroupCodeValueType(440,449,"int"),
+new GroupCodeValueType(450,459,"long"),
+new GroupCodeValueType(460,469,"double"),
+new GroupCodeValueType(470,479,"string"),
+new GroupCodeValueType(480,481,"string"),
+new GroupCodeValueType(999,"string"),
+new GroupCodeValueType(1000,1009,"string"),
+new GroupCodeValueType(1010,1059,"double"),
+new GroupCodeValueType(1060,1070,"int"),
+new GroupCodeValueType(1071,"int")
+};
+#>
+
+<#+
+	public class GroupCodeValueType{
+	
+		public GroupCodeValueType(int from,string type)=>(From,To,Type)=(from,from,type);
+		public GroupCodeValueType(int from,int to,string type)=>(From,To,Type)=(from,to,type);
+
+		public int From{get;}
+		public int To{get;}
+		public string Type{get;}
+	}
+#>

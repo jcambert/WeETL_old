@@ -22,7 +22,7 @@ namespace WeETL.Observables.Dxf.IO
     }
     public interface IReader
     {
-        void Read((int, string) code);
+        void Read<TType>((int, string) code) where TType:DxfBaseTypeAttribute;
         IDxfDocument Document { get; set; }
     }
 
@@ -34,29 +34,48 @@ namespace WeETL.Observables.Dxf.IO
         public const int ApplicationDefined = 102;
         public const int Owner = 330;
     }
-    internal abstract class AbstractReader : IReader
+    internal  class BaseReader
+    {
+        internal bool ReadString(string value, Action<string> onset) => Utilities.ReadString(value, onset);
+        internal bool ReadDouble(string value, Action<double> onset) => Utilities.ReadDouble(value, onset);
+        internal bool ReadInt(string value, Action<int> onset) => Utilities.ReadInt(value, onset);
+        internal bool ReadOnOff(string value, Action<OnOff> onset) => Utilities.ReadOnOff(value, onset);
+        internal bool ReadShort(string value, Action<short> onset) => Utilities.ReadShort(value, onset);
+        internal bool ReadByte(string value, Action<byte> onset) => Utilities.ReadByte(value, onset);
+        internal bool ReadTimeSpan(string value, Action<TimeSpan> onset) => Utilities.ReadTimeSpan(value, onset);
+        internal bool ReadDateTime(string value, Action<DateTime> onset) => Utilities.ReadDateTime(value, onset);
+        
+    }
+    internal abstract class AbstractReader :BaseReader, IReader
     {
         //TODO Making abstract after all Entities are implemented
         protected virtual DxfObject DxfObject { get; set; }
         public IDxfDocument Document { get; set; }
-        internal IServiceProvider ServiceProvider { get; }
+        protected IServiceProvider ServiceProvider { get; }
+        protected ILogger<AbstractReader> Logger { get; }
 
-        static Action<DxfObject, string> ReadHandle = (line, value) => { line.Handle = value; };
+        static Action<DxfObject, string> ReadHandle = (line, value) =>
+        {
+            var v = value.HexStringToInt();//Test if Hex String
+            line.Handle = value;
+        };
         static Action<DxfObject, string> ReadApplicationDefined = (line, value) => { line.Owner = value; };//TODO
         static Action<DxfObject, string> ReadOwner = (line, value) => { line.Owner = value; };
         Action<DxfObject, string> fn;
         int _currentCode = -1;
         public const string NOT_HANDLED = "NotHandled";
         #region ctor
-        public AbstractReader(IServiceProvider serviceProvider)
+        public AbstractReader(IServiceProvider serviceProvider, ILogger<AbstractReader> logger)
         {
             ServiceProvider = serviceProvider;
+            Logger = logger;
         }
 
         #endregion
 
 
-        public virtual void Read((int, string) code)
+        public virtual void Read<TType>((int, string) code)
+            where TType:DxfBaseTypeAttribute
         {
             //Thorw exception if null when all Entities are implemented
             if (DxfObject == null) return;
@@ -66,119 +85,26 @@ namespace WeETL.Observables.Dxf.IO
                 EntityGroupCode.Handle => ReadHandle,
                 EntityGroupCode.ApplicationDefined => ReadApplicationDefined,
                 EntityGroupCode.Owner => ReadOwner,
-                _ => (Line, value) => { }// Nothing TO DO
+                _ => (line, value) => { }// Nothing TO DO
             };
+            
             fn(DxfObject, code.Item2);
             _currentCode = code.Item1;
         }
-        protected bool ReadString(string value, Action<string> onset)
-        {
-            if (value!=null)
-            {
-                onset?.Invoke(value);
-                return true;
-            }
-            return false;
-        }
-
-        protected bool ReadDouble(string value, Action<double> onset)
-        {
-            if (double.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(result);
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadInt(string value, Action<int> onset)
-        {
-            if (int.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(result);
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadOnOff(string value, Action<OnOff> onset)
-        {
-            if (int.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(result>1?OnOff.ON:OnOff.OFF);
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadShort(string value, Action<short> onset)
-        {
-            if (short.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(result);
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadByte(string value, Action<byte> onset)
-        {
-            if (byte.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(result);
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadTimeSpan(string value, Action<TimeSpan> onset)
-        {
-            if (double.TryParse(value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-            {
-                onset?.Invoke(TimeSpan.FromHours( result));
-                return true;
-            }
-            return false;
-        }
-        protected bool ReadHex(string value, Action<double> onset)
-        {
-            throw new NotImplementedException();
-        }
-        protected bool ReadDateTime(string value, Action<DateTime> onset)
-        {
-            double res=0.0;
-            if (!ReadDouble(value, result => res=result))
-            {
-                return false;
-            }
-            try
-            {
-                onset?.Invoke(JulianToDateTime(res));
-                return true;
-            }
-            catch
-            {
-
-            return false;
-            }
-        }
-        DateTime JulianToDateTime(double julianDate)
-        {
-            double unixTime = (julianDate - 2440587.5) * 86400;
-
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(unixTime).ToLocalTime();
-
-            return dtDateTime;
-        }
+        
     }
-    
+
     internal abstract class AbstractVector2Reader : AbstractReader
     {
         double x, y;
-        protected AbstractVector2Reader(IServiceProvider serviceProvider) : base(serviceProvider)
+        protected AbstractVector2Reader(IServiceProvider serviceProvider, ILogger<AbstractVector2Reader> logger) : base(serviceProvider,logger)
         {
         }
-        public override void Read((int, string) code)
+        public override void Read<TTYpe>((int, string) code)
         {
             if (code.Item1 >= 10 && code.Item1 < 20) ReadDouble(code.Item2, result => x = result);
-            if (code.Item1 >= 20 && code.Item1 < 30) 
-       
+            if (code.Item1 >= 20 && code.Item1 < 30)
+
             {
                 ReadDouble(code.Item2, result => y = result);
                 SetValue(new Vector2(x, y));
@@ -188,29 +114,47 @@ namespace WeETL.Observables.Dxf.IO
     }
     internal abstract class AbstractVector3Reader : AbstractReader
     {
+        readonly Vector3Reader v3Reader = new Vector3Reader();
         double x, y, z;
-        protected AbstractVector3Reader(IServiceProvider serviceProvider) : base(serviceProvider)
+        protected AbstractVector3Reader(IServiceProvider serviceProvider, ILogger<AbstractVector3Reader> logger) : base(serviceProvider,logger)
         {
         }
-        public override void Read((int, string) code)
+        public override void Read<TType>((int, string) code)
         {
+            v3Reader.Read(code, (range,v) => SetValue(v));
+            
+        }
+        protected abstract void SetValue(Vector3 value);
+    }
+
+    internal class Vector3Reader :BaseReader
+    {
+        double x, y, z;
+        int range;
+        public Vector3Reader() 
+        {
+        }
+
+        public void Read((int,string) code,Action<int,Vector3> setValue)
+        {
+            if (code.Item1 < 10 || code.Item1 > 39) return;
+            range = (int)(((code.Item1 / 10.0) % 1) * 10);
             if (code.Item1 >= 10 && code.Item1 < 20) ReadDouble(code.Item2, result => x = result);
             if (code.Item1 >= 20 && code.Item1 < 30) ReadDouble(code.Item2, result => y = result);
             if (code.Item1 >= 30 && code.Item1 < 40)
             {
                 ReadDouble(code.Item2, result => z = result);
-                SetValue( new Vector3(x, y, z));
+                setValue(range,new Vector3(x, y, z));
             }
         }
-        protected abstract void SetValue(Vector3 value);
     }
 
     internal abstract class AbstractAciColorReader : AbstractReader
     {
-        protected AbstractAciColorReader(IServiceProvider serviceProvider) : base(serviceProvider)
+        protected AbstractAciColorReader(IServiceProvider serviceProvider, ILogger<AbstractAciColorReader> logger) : base(serviceProvider,logger)
         {
         }
-        public override void Read((int, string) code)
+        public override void Read<TType>((int, string) code)
         {
             byte index = 0;
             if (!ReadByte(code.Item2, result => index = result))
@@ -222,7 +166,7 @@ namespace WeETL.Observables.Dxf.IO
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class DxfSectionAttribute : Attribute, INamed
+    public class DxfSectionAttribute : System.Attribute, INamed
     {
         public DxfSectionAttribute(string name)
         {
@@ -232,10 +176,10 @@ namespace WeETL.Observables.Dxf.IO
         public string Name { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class DxfEntityTypeAttribute : Attribute, INamed
+    
+    public class DxfBaseTypeAttribute : System.Attribute, INamed
     {
-        public DxfEntityTypeAttribute(string name)
+        public DxfBaseTypeAttribute(string name)
         {
             Check.NotEmpty(name, nameof(name));
             this.Name = name;
@@ -244,10 +188,58 @@ namespace WeETL.Observables.Dxf.IO
         public string Name { get; }
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfHeaderTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfHeaderTypeAttribute(string name) : base(name) { }
+        
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfClassTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfClassTypeAttribute(string name) : base(name) { }
+
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfTableTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfTableTypeAttribute(string name) : base(name) { }
+
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfBlockTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfBlockTypeAttribute(string name) : base(name) { }
+
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfObjectTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfObjectTypeAttribute(string name) : base(name) { }
+
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfEntityTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfEntityTypeAttribute(string name) : base(name) { }
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxObjectTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxObjectTypeAttribute(string name) : base(name) { }
+
+    }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class DxfThumbnailTypeAttribute : DxfBaseTypeAttribute
+    {
+        public DxfThumbnailTypeAttribute(string name) : base(name) { }
+
+    }
+
     public abstract class SectionReader : IReader
     {
         IReader currentReader;
-        public SectionReader(IServiceProvider serviceProvider,ILogger<SectionReader> logger)
+        public SectionReader(IServiceProvider serviceProvider, ILogger<SectionReader> logger)
         {
             ServiceProvider = serviceProvider;
             Logger = logger;
@@ -257,11 +249,12 @@ namespace WeETL.Observables.Dxf.IO
         public IDxfDocument Document { get; set; }
         protected virtual int GroupCode => EntityGroupCode.EntityType;
         protected virtual bool CanIgnore => true;
-        public virtual void Read((int, string) code)
+        public virtual void Read<TType>((int, string) code)
+            where TType : DxfBaseTypeAttribute
         {
             if (code.Item1 == GroupCode)
             {
-                currentReader = ServiceProvider.ResolveKeyed<IReader, DxfEntityTypeAttribute>(code.Item2);
+                currentReader = ServiceProvider.ResolveKeyed<IReader, TType>(code.Item2);
 
                 if (!CanIgnore)
                     Check.NotNull(currentReader, code.Item2);
@@ -276,7 +269,7 @@ namespace WeETL.Observables.Dxf.IO
                     _ = currentReader ?? throw new Exception("Malformed dxf");
 
                 if (currentReader != null)
-                    currentReader.Read(code);
+                    currentReader.Read<TType>(code);
 
             }
         }

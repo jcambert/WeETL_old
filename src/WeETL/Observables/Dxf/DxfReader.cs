@@ -16,14 +16,15 @@ namespace WeETL.Observables.Dxf
         IObservable<IDxfDocument> OnLoaded { get; }
     }
 
-    
 
-   
+
+
     public class DxfReader : IDxfReader
     {
+        public const string EndSection = "ENDSEC";
         ISubject<IDxfDocument> _onLoaded = new Subject<IDxfDocument>();
         bool _headerLoaded, _classesLoaded, _tablesLoaded, _blocksLoaded, _entitiesLoaded, _objectsLoaded, _thumbnailLoaded;
-        public DxfReader(IFileReadLine lineReader, IDxfDocument document,IReaderFactory readerFactory)
+        public DxfReader(IFileReadLine lineReader, IDxfDocument document, IReaderFactory readerFactory)
         {
             Check.NotNull(lineReader, nameof(IFileReadLine));
             Check.NotNull(document, nameof(IDxfDocument));
@@ -48,41 +49,42 @@ namespace WeETL.Observables.Dxf
             ISubject<string> lines = new ReplaySubject<string>();
             LineReader.Filename = filename;
             LineReader.Output.Subscribe(lines);
-            
+
             #region Read Header
-            LoadSection(lines, DxfObjectCode.HeaderSection, () => _headerLoaded = true);
+            LoadSection<DxfHeaderTypeAttribute>(lines, DxfHeaderCode.HeaderSection, () => _headerLoaded = true);
             #endregion
             #region Read CLASSES
-            //LoadSection(lines, DxfObjectCode.ClassesSection, () => _classesLoaded = true);
+            LoadSection<DxfClassTypeAttribute>(lines, DxfClasseCode.ClasseSection, () => _classesLoaded = true);
             #endregion
             #region Read TABLES
-            //LoadSection(lines, DxfObjectCode.TablesSection, () => _tablesLoaded=true);
+            LoadSection<DxfTableTypeAttribute>(lines, DxfTableCode.TableSection, () => _tablesLoaded = true);
             #endregion
             #region Read BLOCKS
-           // LoadSection(lines, DxfObjectCode.BlocksSection, () => _blocksLoaded = true);
+            LoadSection<DxfBlockTypeAttribute>(lines, DxfBlockCode.BlockSection, () => _blocksLoaded = true);
             #endregion
             #region Read OBJECTS
-           // LoadSection(lines, DxfObjectCode.ObjectsSection, () => _objectsLoaded = true);
+            LoadSection<DxfObjectTypeAttribute>(lines, DxfObjectCode.ObjectsSection, () => _objectsLoaded = true);
             #endregion
             #region Read ENTITIES
-           // LoadSection(lines, DxfObjectCode.EntitiesSection, () => _entitiesLoaded = true);
+            LoadSection<DxfEntityTypeAttribute>(lines, DxfEntityCode.EntitiesSection, () => _entitiesLoaded = true);
             #endregion
             #region Read THUMNAILIMAGE
-           // LoadSection(lines, DxfObjectCode.ThumbnailImageSection, () => _thumbnailLoaded = true);
+            LoadSection<DxfThumbnailTypeAttribute>(lines, DxfThumbnailCode.ThumbnailImageSection, () => _thumbnailLoaded = true);
             #endregion
         }
 
-        private void LoadSection(IObservable<string> lines,string section,Action onCompleted,Action<IReader> onSubscribe=null)
+        private void LoadSection<TTYpe>(IObservable<string> lines, string section, Action onCompleted, Action<IReader> onSubscribe = null)
+            where TTYpe : DxfBaseTypeAttribute
         {
-            var obs = lines.SkipWhile(s => s != section).TakeWhile(s => s != DxfObjectCode.EndSection);
+            var obs = lines.SkipWhile(s => s != section).TakeWhile(s => s != EndSection);
             obs.Scan(("", ""), (acc, curent) => (acc.Item2, curent.Trim()))
                 .Skip(2)
                 .Where((e, i) => i % 2 == 0)
-                .Aggregate(ReaderFactory.CreateReaderSection(section,Document),
+                .Aggregate(ReaderFactory.CreateReaderSection(section, Document),
                (buffer, value) =>
                {
                    if (Int32.TryParse(value.Item1, out var code))
-                       buffer.Read((code, value.Item2));
+                       buffer.Read<TTYpe>((code, value.Item2));
                    else
                        throw new Exception("Malformed DXF");
                    return buffer;

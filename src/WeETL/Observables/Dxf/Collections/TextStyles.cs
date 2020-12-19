@@ -13,8 +13,10 @@ namespace WeETL.Observables.Dxf.Collections
     public sealed class TextStyles :
         TableObjects<TextStyle>
     {
+        public override string CodeName => DxfTableCode.Style;
         #region private variables
         private IDisposable _onNameChanged;
+
         #endregion
         #region constructor
 
@@ -24,7 +26,7 @@ namespace WeETL.Observables.Dxf.Collections
         }
 
         internal TextStyles(DxfDocument document, string handle)
-            : base(document, DxfObjectCode.TextStyleTable, handle)
+            : base(document,  handle)
         {
         }
 

@@ -1,0 +1,50 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#@ include file=".\..\Templates\Sections\Entity.tt"#>
+<#@ include file=".\..\Templates\Entities\Properties.tt"#>
+<#
+const string ABSTRACT_READER="AbstractReader";
+const string ENTITY_OBJECT_READER="EntitySectionEntityObjectReader";
+#>
+using WeETL.Observables.Dxf.Entities;
+using System;
+using Microsoft.Extensions.Logging;
+
+namespace WeETL.Observables.Dxf.IO
+{
+<#foreach(var code in codes.Where(c=>c.Value.IsHandled || c.Value.IsHeadClass)){#>
+<#
+var inheritFrom=code.Key=="EntityObject"?ABSTRACT_READER:ENTITY_OBJECT_READER;
+if(!code.Value.IsHeadClass){#>
+	[DxfEntityType(DxfEntityCode.<#=code.Key#>),DxfBlockType(DxfEntityCode.<#=code.Key#>)]
+<#}#>
+	internal partial class EntitySection<#=code.Key#>Reader:<#=inheritFrom#>{
+
+		public EntitySection<#=code.Key#>Reader(IServiceProvider sp,ILogger<EntitySection<#=code.Key#>Reader> logger):base(sp,logger)
+		{
+<#if(!code.Value.IsHeadClass){#> 
+			DxfObject= new <#=code.Key#>() ;
+<#}#>
+		}
+
+		public override void Read<TType>((int, string) code)
+        {
+			base.Read<TType>(code);
+			Action<<#=code.Key#>,string> fn = code.Item1 switch
+            {
+<#if(properties.ContainsKey(code.Key)){
+foreach(var p in properties[code.Key]){#>
+                <#=p.Code#> => Utilities.Read<#=p.Name.Replace(".","")#>,
+<#}}#>
+                _ => null
+            };
+			if(fn!=null && DxfObject!=null)
+				fn( DxfObject as <#=code.Key #>, code.Item2);
+		}
+	}
+<#}#>
+}

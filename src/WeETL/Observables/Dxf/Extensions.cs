@@ -61,6 +61,23 @@ namespace WeETL.Observables.Dxf
             return default(T);
         }
 
+        public static bool IsHexString(this string value)
+        {
+            try
+            {
+                var res = value.HexStringToInt();
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+        public static int HexStringToInt(this string value)
+        => value.StartsWith("0x") ? Convert.ToInt32(value, 16) : int.Parse(value, System.Globalization.NumberStyles.HexNumber);
+          
+        public static string IntToHexString(this int value) => $"{value:X}";
     }
 
     internal static class Utilities

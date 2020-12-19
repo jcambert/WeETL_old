@@ -9,10 +9,10 @@ namespace WeETL.Observables.Dxf
         
 
         #region ctor
-        public DxfObject(string codeName)
+        public DxfObject(/*string codeName*/)
         {
-            Check.NotNull(codeName, nameof(codeName));
-            CodeName = codeName;
+           // Check.NotNull(codeName, nameof(codeName));
+            //CodeName = codeName;
             XData = new XDataDictionary();
         }
         #endregion
@@ -21,7 +21,7 @@ namespace WeETL.Observables.Dxf
         public string Owner { get; internal set; }
 
         
-        public string CodeName { get; protected set; }
+        public abstract string CodeName { get; /*protected set; */}
         public XDataDictionary XData { get; }
         #endregion
 

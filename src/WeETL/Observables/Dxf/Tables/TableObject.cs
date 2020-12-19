@@ -22,7 +22,7 @@ namespace WeETL.Observables.Dxf.Tables
         #endregion
 
         #region ctor
-        public TableObject(string name, string codeName, bool checkName):base(codeName)
+        public TableObject(string name,/* string codeName, */bool checkName):base(/*codeName*/)
         {
             if (checkName && !IsValidName(name))
                 throw new ArgumentException($"The name should be at least one character long and the following characters {string.Join("",_invalidCharacters)} are not supported.");

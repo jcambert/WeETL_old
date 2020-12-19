@@ -8,7 +8,7 @@ using WeETL.Observables.Dxf.Tables;
 
 namespace WeETL.Observables.Dxf.Entities
 {
-    public class Text : EntityObject
+    public partial class Text 
     {
         #region private fields
 
@@ -87,7 +87,7 @@ namespace WeETL.Observables.Dxf.Entities
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
         public Text(string text, Vector3 position, double height, TextStyle style)
-            : base(/*EntityType.Text,*/ DxfObjectCode.Text)
+            : base(/*EntityType.Text,*/ /*DxfEntityCode.Text*/)
         {
             this.text = text;
             this.position = position;
@@ -113,7 +113,7 @@ namespace WeETL.Observables.Dxf.Entities
         #endregion
 
         #region overrides
-        public override object Clone()
+     /*   public override object Clone()
         {
             throw new NotImplementedException();
         }
@@ -121,7 +121,7 @@ namespace WeETL.Observables.Dxf.Entities
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             throw new NotImplementedException();
-        }
+        }*/
         #endregion
     }
 }

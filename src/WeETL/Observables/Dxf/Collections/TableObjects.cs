@@ -27,9 +27,10 @@ namespace WeETL.Observables.Dxf.Collections
 
         #region constructor
 
-        protected TableObjects(DxfDocument document, string codeName, string handle)
-            : base(codeName)
+        protected TableObjects(DxfDocument document, /*string codeName, */string handle)
+            : base(/*codeName*/)
         {
+            
             this.list = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
             this.references = new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase);
             this.Owner = document.Handle;

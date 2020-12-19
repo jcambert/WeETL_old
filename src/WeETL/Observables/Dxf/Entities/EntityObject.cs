@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WeETL.Numerics;
 
 namespace WeETL.Observables.Dxf.Entities
 {
-    public abstract class EntityObject:DxfObject, ICloneable
+    public  abstract partial class EntityObject:DxfObject, ICloneable
     {
         #region private Variables
         private Vector3 _normal;
         #endregion
 
         #region ctor
-        protected EntityObject(string dxfCode):base(dxfCode)
+        protected EntityObject(/*string dxfCode*/):base(/*dxfCode*/)
         {
             Normal = Vector3.UnitZ;
         }

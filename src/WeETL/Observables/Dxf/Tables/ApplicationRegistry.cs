@@ -19,11 +19,13 @@ namespace WeETL.Observables.Dxf.Tables
         {
             get { return new ApplicationRegistry(DefaultName); }
         }
+
+        public override string CodeName => DxfTableCode.ApplicationId;
         #endregion
 
         #region ctors
         public ApplicationRegistry(string name):this(name,true){}
-        internal ApplicationRegistry(string name, bool checkName) : base(name, DxfObjectCode.AppId, checkName)
+        internal ApplicationRegistry(string name, bool checkName) : base(name, checkName)
         {
             Check.NotNull(name, nameof(name));
             this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);

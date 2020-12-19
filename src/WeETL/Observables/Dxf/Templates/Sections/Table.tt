@@ -1,0 +1,17 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+Dictionary<string,string> codes=new Dictionary<string,string>(){
+{"ApplicationId","APPID"},
+{"BlockRecord","BLOCK_RECORD"},
+{"DimensionStyle","DIMSTYLE"},
+{"Layer","LAYER"},
+{"LType","LTYPE"},
+{"Style","STYLE"},
+{"Ucs","UCS"},
+{"View","VIEW"},
+{"ViewPort","VIEWPORT"}
+};
+#>

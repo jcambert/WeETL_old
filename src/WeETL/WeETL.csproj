@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Observables\Dxf\DxfEntityCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfEntityCode.tt</DependentUpon>
+    </None>
     <None Include="Observables\Dxf\DxfGroupCode.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -19,6 +24,36 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>DxfObjectCode.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\DxfTableCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfTableCode.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\Entities\Entities.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Entities.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\IO\EntitiesSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>EntitiesSectionReaderGen.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\IO\HeaderSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>HeaderSectionReaderGen.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\IO\ObjectsSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ObjectsSectionReaderGen.tt</DependentUpon>
+    </None>
+    <None Include="Observables\Dxf\IO\UtilitiesGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>UtilitiesGen.tt</DependentUpon>
     </None>
   </ItemGroup>
 
@@ -43,6 +78,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Observables\Dxf\DxfEntityCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfEntityCode.tt</DependentUpon>
+    </Compile>
     <Compile Update="Observables\Dxf\DxfGroupCode.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -57,6 +97,61 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>DxfObjectCode.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\DxfTableCode.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DxfTableCode.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Entities\Entities.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Entities.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\IO\EntitiesSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>EntitiesSectionReaderGen.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\IO\HeaderSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>HeaderSectionReaderGen.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\IO\ObjectsSectionReaderGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ObjectsSectionReaderGen.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\IO\UtilitiesGen.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>UtilitiesGen.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Templates\Entities\Line.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Line.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Templates\Section\Entities.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Entities.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Templates\Section\Object.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Object.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Templates\Section\Table.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Table.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Observables\Dxf\Templates\Type.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Type.tt</DependentUpon>
     </Compile>
     <Compile Update="Properties\AbstractionsStrings.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -82,6 +177,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Observables\Dxf\DxfEntityCode.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DxfEntityCode.cs</LastGenOutput>
+    </None>
     <None Update="Observables\Dxf\DxfGroupCode.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>DxfGroupCode.cs</LastGenOutput>
@@ -94,7 +193,46 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>DxfObjectCode.cs</LastGenOutput>
     </None>
-    <None Update="Observables\Dxf\Header.tt">
+    <None Update="Observables\Dxf\DxfTableCode.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DxfTableCode.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\Entities\Entities.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Entities.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\IO\EntitiesSectionReaderGen.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>EntitiesSectionReaderGen.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\IO\UtilitiesGen.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>UtilitiesGen.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\Templates\Entities\Properties.tt">
+      <Generator></Generator>
+    </None>
+    <None Update="Observables\Dxf\Templates\Sections\Entity.tt">
+      <Generator></Generator>
+    </None>
+    <None Update="Observables\Dxf\Templates\Sections\Header.tt">
+      <Generator></Generator>
+    </None>
+    <None Update="Observables\Dxf\IO\HeaderSectionReaderGen.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>HeaderSectionReaderGen.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\IO\ObjectsSectionReaderGen.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ObjectsSectionReaderGen.cs</LastGenOutput>
+    </None>
+    <None Update="Observables\Dxf\Templates\Sections\Object.tt">
+      <Generator></Generator>
+    </None>
+    <None Update="Observables\Dxf\Templates\Sections\Table.tt">
+      <Generator></Generator>
+    </None>
+    <None Update="Observables\Dxf\Templates\GroupCodeValueType.tt">
       <Generator></Generator>
     </None>
     <None Update="Properties\AbstractionsStrings.Designer.tt">
@@ -105,6 +243,10 @@
 
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Observables\Dxf\IO\Entities\" />
   </ItemGroup>
 
 </Project>

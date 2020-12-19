@@ -15,6 +15,8 @@ namespace WeETL.Observables.Dxf.Collections
     {
         #region private variables
         IDisposable _onNameChangedDisposable;
+
+        public override string CodeName => DxfTableCode.ApplicationId;
         #endregion
         #region constructor
 
@@ -24,7 +26,7 @@ namespace WeETL.Observables.Dxf.Collections
         }
 
         internal ApplicationRegistries(DxfDocument document, string handle)
-            : base(document, DxfObjectCode.ApplicationIdTable, handle)
+            : base(document, handle)
         {
         }
 

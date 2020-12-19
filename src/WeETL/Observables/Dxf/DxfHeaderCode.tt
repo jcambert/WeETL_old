@@ -4,136 +4,8 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-<#@ include file=".\Header.tt"#>
+<#@ include file=".\Templates\Sections\Header.tt"#>
 <#
-Dictionary<string, Header> codes = new Dictionary<string, Header>() {
-{"AcadVer",new Header(1,"ACADVER","DxfVersion.AutoCad2018","IDxfVersion")},
-{"HandleSeed",new Header(5,"HANDSEED","\"1\"")},
-{"Angbase",new Header(50,"ANGBASE","0.0")},
-{"Angdir",new Header( 70,"ANGDIR","AngleDirection.CCW")},
-{"AttMode" , new Header(70,"ATTMODE","AttributeVisibility.Normal")},
-{"AUnits" , new Header(70,"AUNITS","0")},
-{"AUprec",new Header(70,"AUPREC","0","short")},
-{"CeColor",new Header( 62,"CECOLOR","256")},
-{"CeLtScale",new Header(40,"CELTSCALE","1.0")},
-{"CeLtype" ,new Header(6, "CELTYPE","\"ByLayer\"")},
-{"CeLweight",new Header( 370,"CELWEIGHT","-1")},
-{"CLayer", new Header(8,"CLAYER","\"DIM\"")},
-{"CMLJust", new Header(70,"CMLJUST","0")},
-{"CMLScale", new Header(40,"CMLSCALE","1.0")},
-{"CMLStyle",new Header(2, "CMLSTYLE","\"Standard\"")},
-{"DimStyle",new Header(2,"DIMSTYLE","\"STANDARD\"")},
-{"DwgCodePage",new Header (3,"DWGCODEPAGE","\"ANSI_\" + Encoding.ASCII.WindowsCodePage","string")},
-{"TextSize",new Header(40, "TEXTSIZE","3")},
-{"LUnits",new Header(70,"LUNITS","2")},
-{"LUprec",new Header(70,"LUPREC","2")},
-{"MaintenanceVersion",new Header(70,"ACADMAINTVER","20")},
-{"Extnames",new Header(290,"EXTNAMES","1")},
-{"InsBase",new Header(-1,"INSBASE","Vector3.Zero")},
-{"InsUnits",new Header(70,"INSUNITS","4")},
-{"LwDisplay",new Header(290, "LWDISPLAY","0")},
-{"LtScale",new Header( 40,"LTSCALE","1.0")},
-{"MirrText",new Header(70,"MIRRTEXT","0")},
-{"PdMode",new Header(70,"PDMODE","0")},
-{"PdSize",new Header(40,"PDSIZE","0.0")},
-{"PLineGen",new Header(70,"PLINEGEN","0","short")},
-{"PsLtScale",new Header(70,"PSLTSCALE","1","short")},
-{"TdCreate",new Header(40,"TDCREATE","DateTime.Now")},
-{"TduCreate",new Header(40,"TDUCREATE","DateTime.UtcNow")},
-{"TdUpdate",new Header(40,"TDUPDATE","DateTime.Now")},
-{"TduUpdate",new Header(40,"TDUUPDATE","DateTime.UtcNow")},
-{"TdinDwg",new Header(40,"TDINDWG","new TimeSpan()")},
-{"UcsOrg",new Header(-1,"UCSORG","Vector3.Zero")},
-{"UcsXDir",new Header(-1,"UCSXDIR","Vector3.UnitX")},
-{"UcsYDir",new Header(-1,"UCSYDIR","Vector3.UnitY")},
-{"ExtMin",new Header(-1,"EXTMIN","Vector3.Zero")},
-{"ExtMax",new Header(-1,"EXTMAX","Vector3.Zero")},
-{"LimMin",new Header(-1,"LIMMIN","Vector2.Zero")},
-{"LimMax",new Header(-1,"LIMMAX","Vector2.Zero")},
-{"OrthogonalMode",new Header(70,"ORTHOMODE","OnOff.ON")},
-{"RegenMode",new Header(70,"REGENMODE","OnOff.ON")},
-{"FillMode",new Header(70,"FILLMODE","OnOff.ON")},
-{"QteExtMode",new Header(70,"QTEXTMODE","OnOff.ON")},
-{"TraceWidth",new Header(40,"TRACEWID","1.0")},
-{"TextStyle",new Header(7,"TEXTSTYLE","\"STANDARD\"")},
-{"DisplaySilhouette",new Header(70,"DISPSILH","OnOff.OFF")},
-{"DimensioningScaleFactor",new Header(40,"DIMSCALE","1.0")},
-{"DimensioningArrowSize",new Header(40,"DIMASZ","1.0")},
-{"DimensionExtensionLineOffset",new Header(40,"DIMEXO","1.0")},
-{"DimensionLineIncrement",new Header(40,"DIMDLI","1.0")},
-{"DimensionRoudingValue",new Header(40,"DIMRND","1.0")},
-{"DimensionLineExtensions",new Header(40,"DIMDLE","1.0")},
-{"DimensionExtensionLineExtension",new Header(40,"DIMEXE","1.0")},
-{"TolerancePlus",new Header(40,"DIMTP","0.0")},
-{"ToleranceMinus",new Header(40,"DIMTM","0.0")},
-{"DimensionTextHeight",new Header(40,"DIMTXT","3.0")},
-{"SizeOfCenterMark",new Header(40,"DIMCEN","-0.05")},
-{"DimensioningTickSize",new Header(40,"DIMTSZ","0.0")},
-{"DimensionTolerance",new Header(70,"DIMTOL","0")},
-{"DimensionLimit",new Header(70,"DIMLIM","0")},
-{"TextInsideHorizontal",new Header(70,"DIMTIH","0")},
-{"TextOutsideHorizontal",new Header(70,"DIMTOH","0")},
-{"DimensionFirstExtensionLineSuppressed",new Header(70,"DIMSE1","OnOff.OFF")},
-{"DimensionSecondExtensionLineSuppressed",new Header(70,"DIMSE2","OnOff.OFF")},
-{"TextAboveDimension",new Header(70,"DIMTAD","1")},
-{"ControlsSuppressionOfZerosForPrimaryUnit",new Header(70,"DIMZIN","ControlZeroSuppression.RemoveZeroFeetRemoveInch")},
-{"ArrowBlockName",new Header(1,"DIMBLK","\"\"")},
-{"FirstArrowBlockName",new Header(1,"DIMBLK1","\"\"")},
-{"SecondArrowBlockName",new Header(1,"DIMBLK2","\"\"")},
-{"DimensioningAssociative",new Header(70,"DIMASO","OnOff.OFF")},
-{"DimensioningRecomputeWhileDragging",new Header(70,"DIMSHO","OnOff.OFF")},
-{"DimensioningGeneralSuffix",new Header(1,"DIMPOST","\"\"")},
-{"DimensioningAlternateSuffix",new Header(1,"DIMAPOST","\"\"")},
-{"DimensioningAlternateUnit",new Header(70,"DIMALT","0")},
-{"DimensioningAlternateUnitDecimalPlace",new Header(70,"DIMALTD","0")},
-{"DimensioningAlternateUnitScaleFactor",new Header(40,"DIMALTF","1.0")},
-{"DimensioningLinearScaleFactor",new Header(40,"DIMLFAC","1.0")},
-{"DimensioningForceLineExtensions",new Header(70,"DIMTOFL","OnOff.OFF")},
-{"DimensionTextVerticalPosition",new Header(40,"DIMTVP","0.0")},
-{"DimensionForceTextInside",new Header(70,"DIMTIX","OnOff.OFF")},
-{"DimensionSuppressOutsideExtension",new Header(70,"DIMSOXD","OnOff.OFF")},
-{"DimensionUseSeparateArrow",new Header(70,"DIMSAH","OnOff.OFF")},
-{"DimensionLineColor",new Header(70,"DIMCLRD","AciColor.FromIndex(1)")},
-{"DimensionExtensionLineColor",new Header(70,"DIMCLRE","AciColor.FromIndex(1)")},
-{"DimensionTextColor",new Header(70,"DIMCLRT","AciColor.FromIndex(1)")},
-{"DimensionTextScalFactor",new Header(40,"DIMTFAC","1.0")},
-{"DimensionLineGap",new Header(40,"DIMGAP","1.0")},
-{"DimensionHorizontalTextPosition",new Header(70,"DIMJUST","DimensionHorizontalTextPosition.AboveCenterJustifiedBetween")},
-{"DimensionSuppressFirstExtensionLine",new Header(70,"DIMSD1","OnOff.OFF")},
-{"DimensionSuppressSecondExtensionLine",new Header(70,"DIMSD2","OnOff.OFF")},
-{"DimensionVerticalTextPosition",new Header(70,"DIMTOLJ","DimensionVerticalTextPosition.Top")},
-{"ControlsSuppressionOfZerosForToleranceValue",new Header(70,"DIMTZIN","ControlZeroSuppression.RemoveZeroFeetRemoveInch")},
-{"ControlsSuppressionOfZerosForAlternateUnit",new Header(70,"DIMALTZ","ControlZeroSuppression.RemoveZeroFeetRemoveInch")},
-{"ControlsSuppressionOfZerosForAlternateToleranceValue",new Header(70,"DIMALTTZ","ControlZeroSuppression.RemoveZeroFeetRemoveInch")},
-{"DimensionCursor",new Header(70,"DIMUPT","0")},
-{"DimensionNumberOfDecimalPlace",new Header(70,"DIMDEC","1")},
-{"DimensionNumberOfDecimalPlaceToDisplayToleranceValue",new Header(70,"DIMTDEC","1")},
-{"DimensionUnitFormatForAlternateUnit",new Header(70,"DIMALTU","DimensionUnitFormatForAlternateUnit.Decimal")},
-{"DimensionNumberDecimaPlacesToleranceOfAlternateUnits",new Header(70,"DIMALTTD","2")},
-{"DimensionTextStyle",new Header(7,"DIMTXSTY","\"STANDARD\"")},
-{"DimensionAngleFormatForAngular",new Header(70,"DIMAUNIT","AngleFormat.DecimalDegrees")},
-{"DimensionNumberPrecisionPlacesDisplayedAngular",new Header(70,"DIMADEC","0")},
-{"DimensionRoundingAlternateUnits",new Header(40,"DIMALTRND","0.0")},
-{"DimensionControlZeroForAngular",new Header(70,"DIMAZIN","DimensionControlZeroForAngular.DisplaysAllLeadingAndTrailingZeros")},
-{"DimensionSingleCharacterDecimalSeparator",new Header(70,"DIMDSEP","30")},
-{"DimensionControlsTextAndArrowPlacementWhenSpaceIsNotSufficient",new Header(70,"DIMATFIT","3")},
-{"DIMFRAC",new Header("DIMFRAC")},
-{"DimensionArrowBlockNameForLeaders",new Header(1,"DIMLDRBLK","\"\"")},
-{"DimensionUnitsExceptAngular",new Header(1,"DIMLUNIT","GeneralUnit.Decimal")}/*,
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-{"",new Header(,"","")},
-
-*/
-};
 bool hasUnhandled=codes.Values.Any(value=>!value.IsHandled);
 
 #>
@@ -143,9 +15,11 @@ using System.Text;
 using WeETL.Observables.Dxf.Header;
 using WeETL.Observables.Dxf.Units;
 using WeETL.Observables.Dxf.IO;
+using Microsoft.Extensions.Logging;
 namespace WeETL.Observables.Dxf
 {
 	public static class DxfHeaderCode{
+		public const string HeaderSection="HEADER";
 <#foreach (var key in codes.Keys){#>
 		public const string <#=key#>="$<#=codes[key].Name#>";
 <#}#>
@@ -178,13 +52,13 @@ if(codes[key].IsHandled){
 
 	<#if(hasUnhandled){
 	foreach(var code in codes.Where(c=>!c.Value.IsHandled)){
-		#>[DxfEntityType(DxfHeaderCode.<#=code.Key#>)]
+		#>[DxfHeaderType(DxfHeaderCode.<#=code.Key#>)]
 	<#}}#>internal class NotHandled : AbstractReader
     {
-        public NotHandled(IServiceProvider serviceProvider) : base(serviceProvider)
+        public NotHandled(IServiceProvider serviceProvider, ILogger<NotHandled> logger) : base(serviceProvider,logger)
         {
         }
-        public override void Read((int, string) code)
+        public override void Read<DxfBaseTypeAttribute>((int, string) code)
         {
             
         }
