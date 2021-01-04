@@ -26,7 +26,7 @@ namespace WeETL.Observables.Dxf.Collections
         }
 
         internal ApplicationRegistries(DxfDocument document, string handle)
-            : base(document, handle)
+            : base(/*document, handle*/)
         {
         }
 

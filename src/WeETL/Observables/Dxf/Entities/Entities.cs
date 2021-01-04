@@ -3,13 +3,16 @@
 
 using System;
 using WeETL.Numerics;
-
+using WeETL.Observables.Dxf.Tables;
+using WeETL.Observables.Dxf.Units;
 namespace WeETL.Observables.Dxf.Entities
 {
 	public abstract partial class EntityObject{
         #region properties
+        public string Handle{get;set;}
         public string LayerName{get;set;}
         public AciColor Color{get;set;}
+        public ModelSpace ModelSpace{get;set;}
         #endregion
 	}
 	public  partial class Face3d:EntityObject{
@@ -62,6 +65,12 @@ namespace WeETL.Observables.Dxf.Entities
 	}
 	public  partial class Arc:EntityObject{
         #region properties
+        public Vector3 Center{get;set;}
+        public double Thickness{get;set;}
+        public double Radius{get;set;}
+        public double StartAngle{get;set;}
+        public double EndAngle{get;set;}
+        public string SubclassMarker{get;set;}
         #endregion
         #region overrides
         public override string CodeName { get; }= DxfEntityCode.Arc ;
@@ -126,6 +135,10 @@ namespace WeETL.Observables.Dxf.Entities
 	}
 	public  partial class Circle:EntityObject{
         #region properties
+        public Vector3 Center{get;set;}
+        public double Thickness{get;set;}
+        public double Radius{get;set;}
+        public string SubclassMarker{get;set;}
         #endregion
         #region overrides
         public override string CodeName { get; }= DxfEntityCode.Circle ;
@@ -322,6 +335,14 @@ namespace WeETL.Observables.Dxf.Entities
 	}
 	public  partial class MultiLine:EntityObject{
         #region properties
+        public string StyleName{get;set;}
+        public Vector3 Center{get;set;}
+        public double Scale{get;set;}
+        public MLineJustification Justification{get;set;}
+        public MLineFlags Flags{get;set;}
+        public short NumberofVertices{get;set;}
+        public short NumberofStyleElements{get;set;}
+        public string SubclassMarker{get;set;}
         #endregion
         #region overrides
         public override string CodeName { get; }= DxfEntityCode.MultiLine ;
@@ -610,6 +631,19 @@ namespace WeETL.Observables.Dxf.Entities
 	}
 	public  partial class Text:EntityObject{
         #region properties
+        public string Value{get;set;}
+        public string Style{get;set;}
+        public Vector3 FirstAlignmentPoint{get;set;}
+        public Vector3 SecondAlignmentPoint{get;set;}
+        public double Thickness{get;set;}
+        public double Height{get;set;}
+        public double ScaleX{get;set;}
+        public double Rotation{get;set;}
+        public double Oblique{get;set;}
+        public TextGenerationFlag GenerationFlag{get;set;}
+        public HorizontalTextJustification HorizontalJustification{get;set;}
+        public VerticalTextJustification VerticalJustification{get;set;}
+        public string SubclassMarker{get;set;}
         #endregion
         #region overrides
         public override string CodeName { get; }= DxfEntityCode.Text ;

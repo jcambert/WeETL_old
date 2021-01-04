@@ -1,23 +1,28 @@
 ﻿
+
+
 using WeETL.Observables.Dxf.Entities;
 using System;
 using Microsoft.Extensions.Logging;
 
 namespace WeETL.Observables.Dxf.IO
 {
-	internal partial class EntitySectionEntityObjectReader:AbstractReader{
+	internal abstract partial class EntitySectionEntityObjectReader:AbstractReader{
 
 		public EntitySectionEntityObjectReader(IServiceProvider sp,ILogger<EntitySectionEntityObjectReader> logger):base(sp,logger)
 		{
 		}
-
+		protected virtual void InternalRead<TType>((int,string)code){
+		}
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
 			Action<EntityObject,string> fn = code.Item1 switch
             {
-                8 => Utilities.ReadLayerName,
-                62 => Utilities.ReadColor,
+                5 => Utilities.EntityObjectReadHandle,
+                8 => Utilities.EntityObjectReadLayerName,
+                62 => Utilities.EntityObjectReadColor,
+                67 => Utilities.EntityObjectReadModelSpace,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -25,17 +30,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Face3d),DxfBlockType(DxfEntityCode.Face3d)]
-	internal partial class EntitySectionFace3dReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionFace3dReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionFace3dReader(IServiceProvider sp,ILogger<EntitySectionFace3dReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Face3d() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Face3d,string> fn = code.Item1 switch
             {
                 _ => null
@@ -45,17 +50,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Solid3d),DxfBlockType(DxfEntityCode.Solid3d)]
-	internal partial class EntitySectionSolid3dReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSolid3dReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSolid3dReader(IServiceProvider sp,ILogger<EntitySectionSolid3dReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Solid3d() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Solid3d,string> fn = code.Item1 switch
             {
                 _ => null
@@ -65,17 +70,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.AcadProxyEntity),DxfBlockType(DxfEntityCode.AcadProxyEntity)]
-	internal partial class EntitySectionAcadProxyEntityReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionAcadProxyEntityReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionAcadProxyEntityReader(IServiceProvider sp,ILogger<EntitySectionAcadProxyEntityReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new AcadProxyEntity() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<AcadProxyEntity,string> fn = code.Item1 switch
             {
                 _ => null
@@ -85,19 +90,30 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Arc),DxfBlockType(DxfEntityCode.Arc)]
-	internal partial class EntitySectionArcReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionArcReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionArcReader(IServiceProvider sp,ILogger<EntitySectionArcReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Arc() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Arc,string> fn = code.Item1 switch
             {
+                10 => Utilities.ArcReadCenterX,
+                20 => Utilities.ArcReadCenterY,
+                30 => Utilities.ArcReadCenterZ,
+                39 => Utilities.ArcReadThickness,
+                40 => Utilities.ArcReadRadius,
+                50 => Utilities.ArcReadStartAngle,
+                51 => Utilities.ArcReadEndAngle,
+                100 => Utilities.ArcReadSubclassMarker,
+                210 => Utilities.ArcReadNormalX,
+                220 => Utilities.ArcReadNormalY,
+                230 => Utilities.ArcReadNormalZ,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -105,17 +121,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.AttributeDefinition),DxfBlockType(DxfEntityCode.AttributeDefinition)]
-	internal partial class EntitySectionAttributeDefinitionReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionAttributeDefinitionReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionAttributeDefinitionReader(IServiceProvider sp,ILogger<EntitySectionAttributeDefinitionReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new AttributeDefinition() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<AttributeDefinition,string> fn = code.Item1 switch
             {
                 _ => null
@@ -125,17 +141,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Attrib),DxfBlockType(DxfEntityCode.Attrib)]
-	internal partial class EntitySectionAttribReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionAttribReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionAttribReader(IServiceProvider sp,ILogger<EntitySectionAttribReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Attrib() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Attrib,string> fn = code.Item1 switch
             {
                 _ => null
@@ -145,17 +161,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Body),DxfBlockType(DxfEntityCode.Body)]
-	internal partial class EntitySectionBodyReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionBodyReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionBodyReader(IServiceProvider sp,ILogger<EntitySectionBodyReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Body() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Body,string> fn = code.Item1 switch
             {
                 _ => null
@@ -165,19 +181,28 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Circle),DxfBlockType(DxfEntityCode.Circle)]
-	internal partial class EntitySectionCircleReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionCircleReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionCircleReader(IServiceProvider sp,ILogger<EntitySectionCircleReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Circle() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Circle,string> fn = code.Item1 switch
             {
+                10 => Utilities.CircleReadCenterX,
+                20 => Utilities.CircleReadCenterY,
+                30 => Utilities.CircleReadCenterZ,
+                39 => Utilities.CircleReadThickness,
+                40 => Utilities.CircleReadRadius,
+                100 => Utilities.CircleReadSubclassMarker,
+                210 => Utilities.CircleReadNormalX,
+                220 => Utilities.CircleReadNormalY,
+                230 => Utilities.CircleReadNormalZ,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -185,17 +210,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Dimension),DxfBlockType(DxfEntityCode.Dimension)]
-	internal partial class EntitySectionDimensionReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionDimensionReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionDimensionReader(IServiceProvider sp,ILogger<EntitySectionDimensionReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Dimension() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Dimension,string> fn = code.Item1 switch
             {
                 _ => null
@@ -205,17 +230,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Ellipse),DxfBlockType(DxfEntityCode.Ellipse)]
-	internal partial class EntitySectionEllipseReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionEllipseReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionEllipseReader(IServiceProvider sp,ILogger<EntitySectionEllipseReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Ellipse() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Ellipse,string> fn = code.Item1 switch
             {
                 _ => null
@@ -225,17 +250,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Hatch),DxfBlockType(DxfEntityCode.Hatch)]
-	internal partial class EntitySectionHatchReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionHatchReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionHatchReader(IServiceProvider sp,ILogger<EntitySectionHatchReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Hatch() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Hatch,string> fn = code.Item1 switch
             {
                 _ => null
@@ -245,17 +270,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Helix),DxfBlockType(DxfEntityCode.Helix)]
-	internal partial class EntitySectionHelixReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionHelixReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionHelixReader(IServiceProvider sp,ILogger<EntitySectionHelixReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Helix() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Helix,string> fn = code.Item1 switch
             {
                 _ => null
@@ -265,17 +290,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Image),DxfBlockType(DxfEntityCode.Image)]
-	internal partial class EntitySectionImageReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionImageReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionImageReader(IServiceProvider sp,ILogger<EntitySectionImageReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Image() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Image,string> fn = code.Item1 switch
             {
                 _ => null
@@ -285,17 +310,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Insert),DxfBlockType(DxfEntityCode.Insert)]
-	internal partial class EntitySectionInsertReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionInsertReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionInsertReader(IServiceProvider sp,ILogger<EntitySectionInsertReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Insert() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Insert,string> fn = code.Item1 switch
             {
                 _ => null
@@ -305,17 +330,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Leader),DxfBlockType(DxfEntityCode.Leader)]
-	internal partial class EntitySectionLeaderReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionLeaderReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionLeaderReader(IServiceProvider sp,ILogger<EntitySectionLeaderReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Leader() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Leader,string> fn = code.Item1 switch
             {
                 _ => null
@@ -325,17 +350,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Light),DxfBlockType(DxfEntityCode.Light)]
-	internal partial class EntitySectionLightReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionLightReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionLightReader(IServiceProvider sp,ILogger<EntitySectionLightReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Light() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Light,string> fn = code.Item1 switch
             {
                 _ => null
@@ -345,30 +370,30 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Line),DxfBlockType(DxfEntityCode.Line)]
-	internal partial class EntitySectionLineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionLineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionLineReader(IServiceProvider sp,ILogger<EntitySectionLineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Line() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Line,string> fn = code.Item1 switch
             {
-                10 => Utilities.ReadStartX,
-                20 => Utilities.ReadStartY,
-                30 => Utilities.ReadStartZ,
-                11 => Utilities.ReadEndX,
-                21 => Utilities.ReadEndY,
-                31 => Utilities.ReadEndZ,
-                39 => Utilities.ReadThickness,
-                100 => Utilities.ReadSubclassMarker,
-                210 => Utilities.ReadNormalX,
-                220 => Utilities.ReadNormalY,
-                230 => Utilities.ReadNormalZ,
+                10 => Utilities.LineReadStartX,
+                20 => Utilities.LineReadStartY,
+                30 => Utilities.LineReadStartZ,
+                11 => Utilities.LineReadEndX,
+                21 => Utilities.LineReadEndY,
+                31 => Utilities.LineReadEndZ,
+                39 => Utilities.LineReadThickness,
+                100 => Utilities.LineReadSubclassMarker,
+                210 => Utilities.LineReadNormalX,
+                220 => Utilities.LineReadNormalY,
+                230 => Utilities.LineReadNormalZ,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -376,17 +401,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.LwPolyline),DxfBlockType(DxfEntityCode.LwPolyline)]
-	internal partial class EntitySectionLwPolylineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionLwPolylineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionLwPolylineReader(IServiceProvider sp,ILogger<EntitySectionLwPolylineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new LwPolyline() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<LwPolyline,string> fn = code.Item1 switch
             {
                 _ => null
@@ -396,17 +421,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Mesh),DxfBlockType(DxfEntityCode.Mesh)]
-	internal partial class EntitySectionMeshReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionMeshReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionMeshReader(IServiceProvider sp,ILogger<EntitySectionMeshReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Mesh() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Mesh,string> fn = code.Item1 switch
             {
                 _ => null
@@ -416,19 +441,32 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.MultiLine),DxfBlockType(DxfEntityCode.MultiLine)]
-	internal partial class EntitySectionMultiLineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionMultiLineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionMultiLineReader(IServiceProvider sp,ILogger<EntitySectionMultiLineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new MultiLine() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<MultiLine,string> fn = code.Item1 switch
             {
+                2 => Utilities.MultiLineReadStyleName,
+                10 => Utilities.MultiLineReadCenterX,
+                20 => Utilities.MultiLineReadCenterY,
+                30 => Utilities.MultiLineReadCenterZ,
+                40 => Utilities.MultiLineReadScale,
+                70 => Utilities.MultiLineReadJustification,
+                71 => Utilities.MultiLineReadFlags,
+                72 => Utilities.MultiLineReadNumberofVertices,
+                73 => Utilities.MultiLineReadNumberofStyleElements,
+                100 => Utilities.MultiLineReadSubclassMarker,
+                210 => Utilities.MultiLineReadNormalX,
+                220 => Utilities.MultiLineReadNormalY,
+                230 => Utilities.MultiLineReadNormalZ,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -436,17 +474,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.MultiLeader),DxfBlockType(DxfEntityCode.MultiLeader)]
-	internal partial class EntitySectionMultiLeaderReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionMultiLeaderReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionMultiLeaderReader(IServiceProvider sp,ILogger<EntitySectionMultiLeaderReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new MultiLeader() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<MultiLeader,string> fn = code.Item1 switch
             {
                 _ => null
@@ -456,17 +494,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.MultiLeaderStyle),DxfBlockType(DxfEntityCode.MultiLeaderStyle)]
-	internal partial class EntitySectionMultiLeaderStyleReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionMultiLeaderStyleReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionMultiLeaderStyleReader(IServiceProvider sp,ILogger<EntitySectionMultiLeaderStyleReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new MultiLeaderStyle() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<MultiLeaderStyle,string> fn = code.Item1 switch
             {
                 _ => null
@@ -476,17 +514,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.MultiText),DxfBlockType(DxfEntityCode.MultiText)]
-	internal partial class EntitySectionMultiTextReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionMultiTextReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionMultiTextReader(IServiceProvider sp,ILogger<EntitySectionMultiTextReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new MultiText() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<MultiText,string> fn = code.Item1 switch
             {
                 _ => null
@@ -496,17 +534,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.OleFrame),DxfBlockType(DxfEntityCode.OleFrame)]
-	internal partial class EntitySectionOleFrameReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionOleFrameReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionOleFrameReader(IServiceProvider sp,ILogger<EntitySectionOleFrameReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new OleFrame() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<OleFrame,string> fn = code.Item1 switch
             {
                 _ => null
@@ -516,17 +554,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Ole2Frame),DxfBlockType(DxfEntityCode.Ole2Frame)]
-	internal partial class EntitySectionOle2FrameReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionOle2FrameReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionOle2FrameReader(IServiceProvider sp,ILogger<EntitySectionOle2FrameReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Ole2Frame() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Ole2Frame,string> fn = code.Item1 switch
             {
                 _ => null
@@ -536,17 +574,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Point),DxfBlockType(DxfEntityCode.Point)]
-	internal partial class EntitySectionPointReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionPointReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionPointReader(IServiceProvider sp,ILogger<EntitySectionPointReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Point() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Point,string> fn = code.Item1 switch
             {
                 _ => null
@@ -556,17 +594,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.PolyLine),DxfBlockType(DxfEntityCode.PolyLine)]
-	internal partial class EntitySectionPolyLineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionPolyLineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionPolyLineReader(IServiceProvider sp,ILogger<EntitySectionPolyLineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new PolyLine() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<PolyLine,string> fn = code.Item1 switch
             {
                 _ => null
@@ -576,17 +614,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Ray),DxfBlockType(DxfEntityCode.Ray)]
-	internal partial class EntitySectionRayReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionRayReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionRayReader(IServiceProvider sp,ILogger<EntitySectionRayReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Ray() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Ray,string> fn = code.Item1 switch
             {
                 _ => null
@@ -596,17 +634,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Region),DxfBlockType(DxfEntityCode.Region)]
-	internal partial class EntitySectionRegionReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionRegionReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionRegionReader(IServiceProvider sp,ILogger<EntitySectionRegionReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Region() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Region,string> fn = code.Item1 switch
             {
                 _ => null
@@ -616,17 +654,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Section),DxfBlockType(DxfEntityCode.Section)]
-	internal partial class EntitySectionSectionReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSectionReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSectionReader(IServiceProvider sp,ILogger<EntitySectionSectionReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Section() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Section,string> fn = code.Item1 switch
             {
                 _ => null
@@ -636,17 +674,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.EndSection),DxfBlockType(DxfEntityCode.EndSection)]
-	internal partial class EntitySectionEndSectionReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionEndSectionReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionEndSectionReader(IServiceProvider sp,ILogger<EntitySectionEndSectionReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new EndSection() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<EndSection,string> fn = code.Item1 switch
             {
                 _ => null
@@ -656,17 +694,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Shape),DxfBlockType(DxfEntityCode.Shape)]
-	internal partial class EntitySectionShapeReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionShapeReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionShapeReader(IServiceProvider sp,ILogger<EntitySectionShapeReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Shape() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Shape,string> fn = code.Item1 switch
             {
                 _ => null
@@ -676,17 +714,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Solid),DxfBlockType(DxfEntityCode.Solid)]
-	internal partial class EntitySectionSolidReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSolidReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSolidReader(IServiceProvider sp,ILogger<EntitySectionSolidReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Solid() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Solid,string> fn = code.Item1 switch
             {
                 _ => null
@@ -696,17 +734,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Spline),DxfBlockType(DxfEntityCode.Spline)]
-	internal partial class EntitySectionSplineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSplineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSplineReader(IServiceProvider sp,ILogger<EntitySectionSplineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Spline() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Spline,string> fn = code.Item1 switch
             {
                 _ => null
@@ -716,17 +754,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Sun),DxfBlockType(DxfEntityCode.Sun)]
-	internal partial class EntitySectionSunReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSunReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSunReader(IServiceProvider sp,ILogger<EntitySectionSunReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Sun() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Sun,string> fn = code.Item1 switch
             {
                 _ => null
@@ -736,17 +774,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Surface),DxfBlockType(DxfEntityCode.Surface)]
-	internal partial class EntitySectionSurfaceReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionSurfaceReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionSurfaceReader(IServiceProvider sp,ILogger<EntitySectionSurfaceReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Surface() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Surface,string> fn = code.Item1 switch
             {
                 _ => null
@@ -756,17 +794,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Table),DxfBlockType(DxfEntityCode.Table)]
-	internal partial class EntitySectionTableReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionTableReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionTableReader(IServiceProvider sp,ILogger<EntitySectionTableReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Table() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Table,string> fn = code.Item1 switch
             {
                 _ => null
@@ -776,19 +814,39 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Text),DxfBlockType(DxfEntityCode.Text)]
-	internal partial class EntitySectionTextReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionTextReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionTextReader(IServiceProvider sp,ILogger<EntitySectionTextReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Text() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Text,string> fn = code.Item1 switch
             {
+                1 => Utilities.TextReadValue,
+                7 => Utilities.TextReadStyle,
+                10 => Utilities.TextReadFirstAlignmentPointX,
+                11 => Utilities.TextReadSecondAlignmentPointX,
+                20 => Utilities.TextReadFirstAlignmentPointY,
+                21 => Utilities.TextReadSecondAlignmentPointY,
+                30 => Utilities.TextReadFirstAlignmentPointZ,
+                31 => Utilities.TextReadSecondAlignmentPointZ,
+                39 => Utilities.TextReadThickness,
+                40 => Utilities.TextReadHeight,
+                41 => Utilities.TextReadScaleX,
+                50 => Utilities.TextReadRotation,
+                51 => Utilities.TextReadOblique,
+                71 => Utilities.TextReadGenerationFlag,
+                72 => Utilities.TextReadHorizontalJustification,
+                73 => Utilities.TextReadVerticalJustification,
+                100 => Utilities.TextReadSubclassMarker,
+                210 => Utilities.TextReadNormalX,
+                220 => Utilities.TextReadNormalY,
+                230 => Utilities.TextReadNormalZ,
                 _ => null
             };
 			if(fn!=null && DxfObject!=null)
@@ -796,17 +854,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Tolerance),DxfBlockType(DxfEntityCode.Tolerance)]
-	internal partial class EntitySectionToleranceReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionToleranceReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionToleranceReader(IServiceProvider sp,ILogger<EntitySectionToleranceReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Tolerance() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Tolerance,string> fn = code.Item1 switch
             {
                 _ => null
@@ -816,17 +874,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Trace),DxfBlockType(DxfEntityCode.Trace)]
-	internal partial class EntitySectionTraceReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionTraceReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionTraceReader(IServiceProvider sp,ILogger<EntitySectionTraceReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Trace() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Trace,string> fn = code.Item1 switch
             {
                 _ => null
@@ -836,17 +894,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Underlay),DxfBlockType(DxfEntityCode.Underlay)]
-	internal partial class EntitySectionUnderlayReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionUnderlayReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionUnderlayReader(IServiceProvider sp,ILogger<EntitySectionUnderlayReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Underlay() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Underlay,string> fn = code.Item1 switch
             {
                 _ => null
@@ -856,17 +914,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.Vertex),DxfBlockType(DxfEntityCode.Vertex)]
-	internal partial class EntitySectionVertexReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionVertexReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionVertexReader(IServiceProvider sp,ILogger<EntitySectionVertexReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new Vertex() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<Vertex,string> fn = code.Item1 switch
             {
                 _ => null
@@ -876,17 +934,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.ViewPort),DxfBlockType(DxfEntityCode.ViewPort)]
-	internal partial class EntitySectionViewPortReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionViewPortReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionViewPortReader(IServiceProvider sp,ILogger<EntitySectionViewPortReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new ViewPort() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<ViewPort,string> fn = code.Item1 switch
             {
                 _ => null
@@ -896,17 +954,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.WipeOut),DxfBlockType(DxfEntityCode.WipeOut)]
-	internal partial class EntitySectionWipeOutReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionWipeOutReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionWipeOutReader(IServiceProvider sp,ILogger<EntitySectionWipeOutReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new WipeOut() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<WipeOut,string> fn = code.Item1 switch
             {
                 _ => null
@@ -916,17 +974,17 @@ namespace WeETL.Observables.Dxf.IO
 		}
 	}
 	[DxfEntityType(DxfEntityCode.XLine),DxfBlockType(DxfEntityCode.XLine)]
-	internal partial class EntitySectionXLineReader:EntitySectionEntityObjectReader{
+	internal  partial class EntitySectionXLineReader:EntitySectionEntityObjectReader{
 
 		public EntitySectionXLineReader(IServiceProvider sp,ILogger<EntitySectionXLineReader> logger):base(sp,logger)
 		{
  
 			DxfObject= new XLine() ;
 		}
-
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+			InternalRead<TType>(code);
 			Action<XLine,string> fn = code.Item1 switch
             {
                 _ => null

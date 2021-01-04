@@ -26,6 +26,7 @@ namespace WeETL.Observables.Dxf.Tables
         {
             if (checkName && !IsValidName(name))
                 throw new ArgumentException($"The name should be at least one character long and the following characters {string.Join("",_invalidCharacters)} are not supported.");
+            Name = name;
         }
         #endregion
 

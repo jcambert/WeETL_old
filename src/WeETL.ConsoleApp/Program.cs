@@ -10,43 +10,170 @@ using System.Threading.Tasks;
 using WeEFLastic.Extensions.DependencyInjection;
 using WeETL.Components;
 using WeETL.DependencyInjection;
+using WeETL.Numerics;
 using WeETL.Observables;
 using WeETL.Observables.BySpeed;
+using WeETL.Observables.BySpeed.IO;
 using WeETL.Observables.Dxf;
+using WeETL.Observables.Dxf.Entities;
 using WeETL.Observables.Dxf.Header;
+using WeETL.Observables.Dxf.IO;
+using WeETL.Observables.Dxf.Tables;
+using WeETL.Observables.Dxf.Units;
 using WeETL.Observers;
 using WeETL.Schemas;
 
 namespace WeETL.ConsoleApp
 {
-    
+
     class Program
     {
+        public delegate bool GTILicenseInitPtr();
 
 #pragma warning disable CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         static async Task Main(string[] args)
 #pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         {
-  
+            //CalculAngle();return;
+            //var res=CalculateCenterX(new Vector2(-2, -1.5), new Vector2(3,1.5), 3);
 
-                ETLContext ctx = new ETLContext();
+            /* Console.WriteLine(Vector2.AngleBetween(new Vector2(5, 1), new Vector2(2, 3),true) * 180 / Math.PI);
+             Console.WriteLine(Vector2.AngleBetween(new Vector2(2, 3), new Vector2(5, 1),true) * 180 / Math.PI);
+             Console.WriteLine(Vector2.AngleBetween(new Vector2(5, 1), new Vector2(-3, -4), true) * 180 / Math.PI);
+             Console.WriteLine(Vector2.AngleBetween(new Vector2(-3,-4), new Vector2(5,1)) * 180 / Math.PI);
+             return;*/
+
+            /* var v1 = new Vector2(20, 5);
+             var v2 = new Vector2(-6, 12);
+             var v3 = new Vector2(-6, -12);
+             var v4 = new Vector2(7,-11);
+             Console.WriteLine(Vector2.Angle(v1).ToDegree());
+             Console.WriteLine(Vector2.Angle(v2).ToDegree());
+             Console.WriteLine(Vector2.Angle(v3).ToDegree());
+             Console.WriteLine(Vector2.Angle(v4).ToDegree());*/
+            /*
+            var res = CalculateCenterX(new Vector2(0, 10), new Vector2(0, -10), 15);
+            var v1 = new Vector2(0, 10) - new Vector2(res.Item1.Item1, res.Item1.Item2);
+            var v2 = new Vector2(0,-10)- new Vector2(res.Item1.Item1, res.Item1.Item2);
+            Console.WriteLine(Vector2.AngleBetween(v1, v2,true) * 180 / Math.PI);
+
+            var v3 = new Vector2(0, 10) - new Vector2(res.Item2.Item1, res.Item2.Item2);
+            var v4 = new Vector2(0, -10) - new Vector2(res.Item2.Item1, res.Item2.Item2);
+            Console.WriteLine(Vector2.AngleBetween(v4, v3,true) * 180 / Math.PI);*/
+
+            //return;
+
+
+            string filename = "15563001";// "radioactif";// "calimero";// "asterix";//"15563001";// "15565001";//"temp"
+            ETLContext ctx = new ETLContext();
             ctx.ConfigureService(cfg =>
             {
                 cfg.UseCommonUtilities();
                 cfg.UseGCommands();
                 cfg.UseDxf();
             });
-            /* var prg = ctx.GetService<ILaserCutBySpeedReader>();
-             var res=await prg.Load( $@"{AppDomain.CurrentDomain.BaseDirectory}15565001.lcc");*/
-
-            var dxfReader = ctx.GetService<IDxfReader>();
-            var cons = ctx.GetService<IConsoleOberver<IDxfDocument>>();
-            dxfReader.OnLoaded.Subscribe(doc =>
+            var dxfWriter = ctx.GetService<IDxfWriter>();
+            dxfWriter.OnWrited.Subscribe(document =>
             {
-                doc.Header.AcadVer = DxfVersion.AutoCad2018;
-                Console.WriteLine(doc.Header.ToString());
+                Console.WriteLine($@"d:\{filename}.dxf is writed");
             });
-            dxfReader.Load($@"{AppDomain.CurrentDomain.BaseDirectory}ST2018L0804.dxf");
+
+            bool drawFormat = false;
+            bool removePriming = false;
+            bool useOrigin = true;
+            var dxfDocument = ctx.GetService<IDxfDocument>();
+            var prgReader = ctx.GetService<ILaserCutBySpeedReader>();
+            prgReader.RemovePrimings = removePriming;
+            prgReader.OnLoaded.Subscribe(doc =>
+            {
+                //var orientation = dxfDocument.Header.Angdir;
+                int counter = 0;
+                if (drawFormat)
+                {
+                    dxfDocument.Entities.Add(new Line(Vector2.Zero, new Vector2(doc.Format.Length, 0)) { LayerName = "format" });
+                    dxfDocument.Entities.Add(new Line(new Vector2(doc.Format.Length, 0), new Vector2(doc.Format.Length, doc.Format.Width)) { LayerName = "format" });
+                    dxfDocument.Entities.Add(new Line(new Vector2(doc.Format.Length, doc.Format.Width), new Vector2(0, doc.Format.Width)) { LayerName = "format" });
+                    dxfDocument.Entities.Add(new Line(new Vector2(0, doc.Format.Width), Vector2.Zero) { LayerName = "format" });
+                }
+                doc.Origins.Keys/*.Skip(4).Take(1)*/.ToList().ForEach(originKey =>
+                {
+                    var origins = doc.Origins[originKey];
+                    var piece = doc.Pieces[originKey];
+                    origins/*.Take(1)*/.ToList().ForEach(origin =>
+                    {
+                        var cos = Math.Cos(origin.Item3);
+                        var sin = Math.Sin(origin.Item3);
+                        var rotation = new Matrix3(cos, -sin, 0, sin, cos, 0, 0, 0, 1);
+
+                        int counter2 = 0;
+                        var o = useOrigin ? new Vector3(origin.Item1, origin.Item2, 0) : Vector3.Zero;
+                        var layer = $"{++counter} {piece.Name}";
+
+                        piece.Lines.ForEach(line =>
+                        {
+                            Line _line = line.CloneMe();
+                            _line.Start += o;
+                            _line.End += o;
+                            _line.LayerName = layer;
+                            if (origin.Item3 != 0.0)
+                                _line = _line.TransformMe(rotation, Vector3.Zero);
+                            dxfDocument.Entities.Add(_line);
+                        });
+                        piece.Arcs.ForEach(arc =>
+                        {
+                            ++counter2;
+                            // if( counter2>=29 && counter2<=31)
+                            //arc.LayerName = $"{layer}-arc{++counter2}-{arc.Comment}";
+
+                            var _arc = arc.CloneMe();
+                            _arc.Center += o;
+                            _arc.LayerName = $"arc{counter2} {layer}";
+                            _arc.Color = arc.Comment == "G2" ? AciColor.Blue : AciColor.Cyan;
+
+                            if (origin.Item3 != 0.0)
+                                _arc = _arc.TransformMe(rotation, Vector3.Zero);
+                            dxfDocument.Entities.Add(_arc);
+                        });
+
+                    });
+
+                });
+                /* doc.Pieces.Keys.ToList().ForEach(key=> {
+                     var layer = doc.Pieces[key].Name;
+                     doc.Pieces[key].Lines.ForEach(line => { line.LayerName = layer; dxfDocument.Entities.Add(line); });
+                     doc.Pieces[key].Arcs.ForEach(arc => { arc.LayerName = layer; dxfDocument.Entities.Add(arc); });
+
+
+                 });*/
+                dxfWriter.Write(dxfDocument, $@"d:\{filename}.dxf");
+            });
+            prgReader.Load($@"{AppDomain.CurrentDomain.BaseDirectory}{filename}.lcc");
+
+
+            /* var dxfReader = ctx.GetService<IDxfReader>();
+             dxfReader.OnLoaded.Subscribe(doc =>
+             {
+                 doc.Header.AcadVer = DxfVersion.AutoCad2018;
+                 Console.WriteLine("Document Version:"+doc.Header.AcadVer.ToString());
+             });
+            dxfReader.DxfSection = DxfSection.Entities;
+             dxfReader.Load($@"{AppDomain.CurrentDomain.BaseDirectory}ST2018L0804.dxf");*/
+
+
+            /*   var document = ctx.GetService<IDxfDocument>();
+               var dxfWriter = ctx.GetService<IDxfWriter>();
+               dxfWriter.OnWrited.Subscribe(document =>
+               {
+                   Console.WriteLine("Document is writed");
+               });
+
+               document.Entities.Add(new Circle(50, 100, 150) { LayerName="Circles"});
+               document.Entities.Add(new Line(new Vector2(0, 0), new Vector2(100, 50)) {LayerName="Lines" });
+               document.Entities.Add(new Arc(new Vector2(50,0),25,0,180) { LayerName="Arcs",Color=AciColor.Green});
+               document.Entities.Add(new Text("HELLO", new Vector2(50, 50),20) { LayerName = "Texts", Color = AciColor.Blue });
+
+               document.Tables.TextStyles.Add(new TextStyle("arial.ttf", "arial", FontStyle.Bold) { Height=5});
+               dxfWriter.Write(document, @"d:\circle.dxf");*/
 
             // Console.ReadLine();
             /* WaitFile wf = new WaitFile(new WaitFileOptions() {
@@ -431,5 +558,60 @@ namespace WeETL.ConsoleApp
 
              await job.Start();
          }*/
+
+        static void CalculAngle()
+        {
+            var offset = new Vector2(0, 0);
+            var zero = Vector2.UnitX;
+            var from = new Vector2(665.5, 26.4) + offset;
+            var to = new Vector2(661.5, 22.4) + offset;
+            var center = new Vector2(665.5, 22.4) + offset;
+            var orientation = AngleDirection.CCW;
+            Console.WriteLine(orientation.ToString());
+            var o = Orient(NormalizeRadianToDegree(Vector2.AngleBetween(from - center, zero)), NormalizeRadianToDegree(Vector2.AngleBetween(to - center, zero)), orientation);
+            Console.WriteLine($"Start:{o.Item1} - End:{o.Item2}");
+
+            orientation = AngleDirection.CW;
+            Console.WriteLine(orientation.ToString());
+            o = Orient(NormalizeRadianToDegree(Vector2.AngleBetween(from - center, zero)), NormalizeRadianToDegree(Vector2.AngleBetween(to - center, zero)), orientation);
+            Console.WriteLine($"Start:{o.Item1} - End:{o.Item2}");
+
+            orientation = AngleDirection.CCW;
+            from = new Vector2(4, 4);
+            to = new Vector2(0, 0);
+            center = new Vector2(0, 4);
+            Console.WriteLine(orientation);
+            o = Orient(NormalizeRadianToDegree(Vector2.AngleBetween(from - center, zero)), NormalizeRadianToDegree(Vector2.AngleBetween(to - center, zero)), orientation);
+            Console.WriteLine($"Start:{o.Item1} - End:{o.Item2}");
+
+            orientation = AngleDirection.CW;
+            Console.WriteLine(orientation);
+            o = Orient(NormalizeRadianToDegree(Vector2.AngleBetween(from - center, zero)), NormalizeRadianToDegree(Vector2.AngleBetween(to - center, zero)), orientation);
+            Console.WriteLine($"Start:{o.Item1} - End:{o.Item2}");
+        }
+
+        static double NormalizeRadianToDegree(double value) => ((value * 180 / Math.PI) + 360) % 360.0;
+
+        static (double, double) Orient(double start, double end, AngleDirection dir)
+        => dir switch
+        {
+            AngleDirection.CCW => start == 0 ? (end, start) : (Math.Min(start, end), Math.Max(start, end)),
+            _ => (start == 0) ? (start, end) : (Math.Max(start, end), Math.Min(start, end)),
+        };
+
+        static ((double, double), (double, double)) CalculateCenterX(Vector2 x, Vector2 y, double radius)
+        {
+            double k = (x.X - y.X) / (y.Y - x.Y);
+            double h = (Math.Pow(y.X, 2) - Math.Pow(x.X, 2) + Math.Pow(y.Y, 2) - Math.Pow(x.Y, 2)) / (2 * (y.Y - x.Y));
+            double m = Math.Pow(k, 2) + 1;
+            double n = (-2 * x.X) + (2 * k * h) - (2 * k * x.Y);
+            double p = Math.Pow(x.X, 2) + Math.Pow(x.Y, 2) - (2 * h * x.Y) + Math.Pow(h, 2) - Math.Pow(radius, 2);
+            double x1 = (-n + Math.Sqrt(Math.Pow(n, 2) - (4 * m * p))) / (2 * m);//0.863803
+            double x2 = (-n - Math.Sqrt(Math.Pow(n, 2) - (4 * m * p))) / (2 * m); //0.136196
+
+            double y1 = k * x1 + h;//-0.606339
+            double y2 = k * x2 + h;//0.606339
+            return ((x1, y1), (x2, y2));
+        }
     }
 }

@@ -4,11 +4,10 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 <#@ include file=".\..\Templates\Sections\Entity.tt"#>
-<#@ include file=".\..\Templates\Entities\Properties.tt"#>
-<#@ include file=".\..\Templates\GroupCodeValueType.tt"#>
+<#@ include file=".\..\Templates\Properties\Entities.tt"#>
 using System;
 using WeETL.Numerics;
-
+using WeETL.Observables.Dxf.Units;
 namespace WeETL.Observables.Dxf.Entities
 {
 <#
@@ -22,11 +21,12 @@ var inheritFrom=code.Key=="EntityObject"?"":":EntityObject";
 <#if(properties.ContainsKey(code.Key)){
 foreach(var p in properties[code.Key].Where(p=>p.ImplementInEntity)){
 var gpCode=groupCodeValueTypes.Where(g=>g.From<=p.Code && g.To>=p.Code).FirstOrDefault();
+var type=p.InternalType!=null?p.InternalType:gpCode.Type;
 if(p.Name.Contains(".") && !(propCache.Contains(code.Key,p.Name.Split('.')[0],true))){#>
         public <#=p.InternalType#> <#=p.Name.Split('.')[0]#>{get;set;}
 <#
 }else if(!p.Name.Contains(".") && !propCache.Contains(code.Key,p.Name,true)){#>
-        public <#=gpCode.Type#> <#=p.Name#>{get;set;}
+        public <#=type#> <#=p.Name#>{get;set;}
 <#}#>
 <#}}#>
         #endregion

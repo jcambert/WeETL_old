@@ -599,6 +599,9 @@ namespace WeETL.Numerics
             return new Vector3(u.X / v.X, u.Y / v.Y, u.Z / v.Z);
         }
 
+        public static implicit operator Vector2(Vector3 v)=>new Vector2(v.X,v.Y);
+        public static implicit operator Vector3(Vector2 v) => new Vector3(v.X, v.Y,0);
+
         #endregion
 
         #region public methods

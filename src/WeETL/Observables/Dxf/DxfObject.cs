@@ -4,14 +4,23 @@ using WeETL.Utilities;
 
 namespace WeETL.Observables.Dxf
 {
-    public abstract class DxfObject
+    public interface IDxfObject
     {
-        
+        string Handle { get; }
+        string Owner { get; }
+
+
+        string CodeName { get; }
+        XDataDictionary XData { get; }
+    }
+    public abstract class DxfObject:IDxfObject
+    {
+
 
         #region ctor
         public DxfObject(/*string codeName*/)
         {
-           // Check.NotNull(codeName, nameof(codeName));
+            // Check.NotNull(codeName, nameof(codeName));
             //CodeName = codeName;
             XData = new XDataDictionary();
         }
@@ -20,7 +29,7 @@ namespace WeETL.Observables.Dxf
         public string Handle { get; internal set; }
         public string Owner { get; internal set; }
 
-        
+        public string Comment { get; set; }
         public abstract string CodeName { get; /*protected set; */}
         public XDataDictionary XData { get; }
         #endregion

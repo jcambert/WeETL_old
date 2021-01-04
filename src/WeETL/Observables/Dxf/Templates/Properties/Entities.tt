@@ -1,0 +1,185 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Globalization" #>
+<#@ include file=".\..\GroupCodeValueType.tt"#>
+<#
+var properties =new Dictionary<string,List<Property>>(){
+
+{"EntityObject",new List<Property>(){
+new Property(5,"Handle"),
+new Property(8,"LayerName"),
+new Property(62,"Color","AciColor","new AciColor((byte){0})"),
+new Property(67,"ModelSpace","ModelSpace"){IsEnum=true}}},
+
+{"Line",new List<Property>(){
+new Property(10,"Start.X","Vector3"),
+new Property(20,"Start.Y","Vector3"),
+new Property(30,"Start.Z","Vector3"),
+new Property(11,"End.X","Vector3"),
+new Property(21,"End.Y","Vector3"),
+new Property(31,"End.Z","Vector3"),
+new Property(39,"Thickness"),
+new Property(100,"SubclassMarker"),
+new Property(210,"Normal.X","Vector3",false),
+new Property(220,"Normal.Y","Vector3",false),
+new Property(230,"Normal.Z","Vector3",false)}},
+
+{"Circle",new List<Property>(){
+new Property(10,"Center.X","Vector3"),
+new Property(20,"Center.Y","Vector3"),
+new Property(30,"Center.Z","Vector3"),
+new Property(39,"Thickness"),
+new Property(40,"Radius"),
+new Property(100,"SubclassMarker"),
+new Property(210,"Normal.X","Vector3",false),
+new Property(220,"Normal.Y","Vector3",false),
+new Property(230,"Normal.Z","Vector3",false)}},
+
+{"Arc",new List<Property>(){
+new Property(10,"Center.X","Vector3"),
+new Property(20,"Center.Y","Vector3"),
+new Property(30,"Center.Z","Vector3"),
+new Property(39,"Thickness"),
+new Property(40,"Radius"),
+new Property(50,"StartAngle"),
+new Property(51,"EndAngle"),
+new Property(100,"SubclassMarker"),
+new Property(210,"Normal.X","Vector3",false),
+new Property(220,"Normal.Y","Vector3",false),
+new Property(230,"Normal.Z","Vector3",false)}},
+
+{"MultiLine",new List<Property>(){
+new Property(2,"StyleName"),
+new Property(10,"Center.X","Vector3"),
+new Property(20,"Center.Y","Vector3"),
+new Property(30,"Center.Z","Vector3"),
+new Property(40,"Scale"),
+new Property(70,"Justification","MLineJustification"){IsEnum=true},
+new Property(71,"Flags","MLineFlags"){IsEnum=true},
+new Property(72,"NumberofVertices","short"),
+new Property(73,"NumberofStyleElements","short"),
+new Property(100,"SubclassMarker"),
+new Property(210,"Normal.X","Vector3",false),
+new Property(220,"Normal.Y","Vector3",false),
+new Property(230,"Normal.Z","Vector3",false)}},
+
+{"Text",new List<Property>(){
+new Property(1,"Value"),
+new Property(7,"Style"),
+new Property(10,"FirstAlignmentPoint.X","Vector3"),
+new Property(11,"SecondAlignmentPoint.X","Vector3"),
+new Property(20,"FirstAlignmentPoint.Y","Vector3"),
+new Property(21,"SecondAlignmentPoint.Y","Vector3"),
+new Property(30,"FirstAlignmentPoint.Z","Vector3"),
+new Property(31,"SecondAlignmentPoint.Z","Vector3"),
+new Property(39,"Thickness"),
+new Property(40,"Height"),
+new Property(41,"ScaleX"),
+new Property(50,"Rotation"),
+new Property(51,"Oblique"),
+new Property(71,"GenerationFlag","TextGenerationFlag"){IsEnum=true},
+new Property(72,"HorizontalJustification","HorizontalTextJustification"){IsEnum=true},
+new Property(73,"VerticalJustification","VerticalTextJustification"){IsEnum=true},
+new Property(100,"SubclassMarker"),
+new Property(210,"Normal.X","Vector3",false),
+new Property(220,"Normal.Y","Vector3",false),
+new Property(230,"Normal.Z","Vector3",false)}},
+
+
+};
+Property.GroupCodeValueTypes=groupCodeValueTypes;
+#><#+
+	public class Property{
+        private GroupCodeValueType _gpCode;
+        private TextInfo ti=CultureInfo.CurrentCulture.TextInfo;
+        public static List<GroupCodeValueType> GroupCodeValueTypes{get;set;}
+        public static List<string> PrimitivesTypes=new List<string>(){"bool","byte","sbyte","char","decimal","double","float","int","uint","long","ulong","short"};
+        public static List<string> NonNullableTypes=new List<string>(){"Vector2","Vector3","ModelSpace"};
+        public static List<string> IntegratedTypes=new List<string>(){"object","dynamic","string"};
+		
+        public Property(int code, string name)=>(Code,Name,InternalType,ImplementInEntity)=(code,name,null,true);
+        public Property(int code,string name,string internalType)=>(Code,Name,InternalType,ImplementInEntity)=(code,name,internalType,true);
+		public Property(int code,string name,string internalType,string constructFrom)=>(Code,Name,InternalType,ConstructFrom,ImplementInEntity)=(code,name,internalType,constructFrom,true);
+		public Property(int code,string name,string internalType,bool impl)=>(Code,Name,InternalType,ImplementInEntity)=(code,name,internalType,impl);
+	
+		public int Code{get;}
+		
+		public string Name{get;}
+
+		public string InternalType{get;}
+
+		public bool ImplementInEntity{get;}
+
+        public string ConstructFrom{get;}=string.Empty;
+        public bool IsEnum{get;set;}=false;
+        public bool IsDouble=>GpCode.Type=="double";
+        private GroupCodeValueType GpCode{
+        get
+            {
+             if(_gpCode==null)_gpCode=GroupCodeValueTypes.Where(g=>g.From<=Code && g.To>=Code).FirstOrDefault();
+             return _gpCode;
+           }
+        }
+
+        public string GetConstructFrom(params string[] values)=>string.IsNullOrEmpty(ConstructFrom)?values[0]:string.Format(ConstructFrom,values);
+
+        private string InternalGetReader=>InternalType!=null && IsPrimitive(InternalType)?$"Read{ti.ToTitleCase(InternalType)}":$"Read{ti.ToTitleCase(GpCode.Type)}";
+
+        private string InternalGetReaderCast=>InternalType!=null?$"({InternalType})": string.Empty;
+        
+        private string InternalGetReaderSetValue
+        =>string.IsNullOrEmpty(ConstructFrom)?$"{InternalGetReaderCast} value":string.Format(ConstructFrom,"value");
+        
+
+        public string GetReader(string elt){
+            if(Name.Contains(".")){
+                var name=Name.Split('.')[0];
+                var value=Name.Split('.')[1];
+                StringBuilder sb=new StringBuilder();
+                sb.AppendLine($"var {name.ToLower()} = {elt}.{name};");
+                sb.AppendLine($"{InternalGetReader}(value, value => {name.ToLower()}.{value} =value);");
+                sb.AppendLine($"{elt}.{name} = {name.ToLower()};");
+                return sb.ToString();
+            }
+            return $"{InternalGetReader}(value, value => {elt}.{Name} ={InternalGetReaderSetValue} );";
+        }
+        
+        public string GetWriterCast(string elt){
+            if(IsEnum) return $"(({GpCode.Type}){elt}.{Name}).ToString()";
+            if(IsDouble)return "String.Format(CultureInfo.InvariantCulture, \"{0:0.0######}\","+$"{elt}.{Name})";
+            
+            return $"{elt}.{Name}.ToString()";
+        }
+        public static bool IsPrimitive(string type)=>PrimitivesTypes.Contains(type);
+        public static bool IsNullable(string type)=>IntegratedTypes.Contains(type);
+        public bool IsTypeNullable{
+            get{
+                if(IsEnum)return false;
+                if(InternalType!=null &&  NonNullableTypes.Contains(InternalType))return false;
+                if(InternalType!=null &&  !PrimitivesTypes.Contains(InternalType))return true;
+                if(PrimitivesTypes.Contains(GpCode.Type))return false;
+                return true;
+                }
+            }
+
+	}
+	public class PropertyCache{
+        Dictionary<string,List<string>> propCache=new Dictionary<string,List<string>>();
+        public bool Contains(string key,string propname,bool add=false){
+            var result= propCache.ContainsKey(key) && propCache[key].Any(p=>p==propname);
+            if(add)Add(key,propname);
+            return result;
+        }
+         public bool Add(string key,string propname){
+            if(!propCache.ContainsKey(key))propCache[key]=new List<string>();
+            propCache[key].Add(propname);
+            return true;
+        }
+        public bool Clear(string key){
+            propCache[key]=new List<string>();
+            return true;
+        }
+    }
+#>

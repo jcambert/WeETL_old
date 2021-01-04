@@ -3,17 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using WeETL.Observables.Dxf.IO;
+using WeETL.IO;
 using WeETL.Utilities;
 
-namespace WeETL.Observables.Dxf
+namespace WeETL.Observables.Dxf.IO
 {
-    public interface IDxfReader
+    [Flags]
+    public enum DxfSection
     {
-        void Load(string filename);
-        IDxfDocument Document { get; set; }
+        None = 0,
+        Header = 1,
+        Classes = 2,
+        Tables = 4,
+        Blocks = 8,
+        Entities = 16,
+        Objects = 32,
+        Thumbnails = 64,
+        All = 127
 
-        IObservable<IDxfDocument> OnLoaded { get; }
+    }
+    public interface IDxfReader:IFileReader<IDxfDocument>
+    {
+        /* void Load(string filename, DxfSection DxfSection = DxfSection.All);*/
+        public DxfSection DxfSection { get; set; }
     }
 
 
@@ -23,7 +35,7 @@ namespace WeETL.Observables.Dxf
     {
         public const string EndSection = "ENDSEC";
         ISubject<IDxfDocument> _onLoaded = new Subject<IDxfDocument>();
-        bool _headerLoaded, _classesLoaded, _tablesLoaded, _blocksLoaded, _entitiesLoaded, _objectsLoaded, _thumbnailLoaded;
+        DxfSection _headerLoaded=DxfSection.None, _classesLoaded=DxfSection.None, _tablesLoaded=DxfSection.None, _blocksLoaded=DxfSection.None , _entitiesLoaded=DxfSection.None, _objectsLoaded=DxfSection.None, _thumbnailLoaded=DxfSection.None;
         public DxfReader(IFileReadLine lineReader, IDxfDocument document, IReaderFactory readerFactory)
         {
             Check.NotNull(lineReader, nameof(IFileReadLine));
@@ -39,37 +51,48 @@ namespace WeETL.Observables.Dxf
 
         public IObservable<IDxfDocument> OnLoaded => _onLoaded.AsObservable();
 
+        public DxfSection DxfSection { get; set; } = DxfSection.All;
+
+        
         private void SendLoaded()
         {
-            if (_headerLoaded && _classesLoaded && _tablesLoaded && _blocksLoaded && _entitiesLoaded && _objectsLoaded && _thumbnailLoaded)
+            if (DxfSection == (_headerLoaded | _classesLoaded | _tablesLoaded | _blocksLoaded | _entitiesLoaded | _objectsLoaded | _thumbnailLoaded))
                 _onLoaded.OnNext(Document);
         }
         public void Load(string filename)
         {
+            var section= DxfSection;
             ISubject<string> lines = new ReplaySubject<string>();
             LineReader.Filename = filename;
             LineReader.Output.Subscribe(lines);
 
             #region Read Header
-            LoadSection<DxfHeaderTypeAttribute>(lines, DxfHeaderCode.HeaderSection, () => _headerLoaded = true);
+            if (section == DxfSection.Header)
+                LoadSection<DxfHeaderTypeAttribute>(lines, DxfHeaderCode.HeaderSection, () => _headerLoaded = DxfSection.Header);
             #endregion
             #region Read CLASSES
-            LoadSection<DxfClassTypeAttribute>(lines, DxfClasseCode.ClasseSection, () => _classesLoaded = true);
+            if (section == DxfSection.Classes)
+                LoadSection<DxfClassTypeAttribute>(lines, DxfClasseCode.ClasseSection, () => _classesLoaded = DxfSection.Classes);
             #endregion
             #region Read TABLES
-            LoadSection<DxfTableTypeAttribute>(lines, DxfTableCode.TableSection, () => _tablesLoaded = true);
+            if (section == DxfSection.Tables)
+                LoadSection<DxfTableTypeAttribute>(lines, DxfTableCode.TableSection, () => _tablesLoaded = DxfSection.Tables);
             #endregion
             #region Read BLOCKS
-            LoadSection<DxfBlockTypeAttribute>(lines, DxfBlockCode.BlockSection, () => _blocksLoaded = true);
+            if (section == DxfSection.Blocks)
+                LoadSection<DxfBlockTypeAttribute>(lines, DxfBlockCode.BlockSection, () => _blocksLoaded = DxfSection.Blocks);
             #endregion
             #region Read OBJECTS
-            LoadSection<DxfObjectTypeAttribute>(lines, DxfObjectCode.ObjectsSection, () => _objectsLoaded = true);
+            if (section == DxfSection.Objects)
+                LoadSection<DxfObjectTypeAttribute>(lines, DxfObjectCode.ObjectsSection, () => _objectsLoaded = DxfSection.Objects);
             #endregion
             #region Read ENTITIES
-            LoadSection<DxfEntityTypeAttribute>(lines, DxfEntityCode.EntitiesSection, () => _entitiesLoaded = true);
+            if (section == DxfSection.Entities)
+                LoadSection<DxfEntityTypeAttribute>(lines, DxfEntityCode.EntitiesSection, () => _entitiesLoaded = DxfSection.Entities);
             #endregion
-            #region Read THUMNAILIMAGE
-            LoadSection<DxfThumbnailTypeAttribute>(lines, DxfThumbnailCode.ThumbnailImageSection, () => _thumbnailLoaded = true);
+            if (section == DxfSection.Thumbnails)
+                #region Read THUMNAILIMAGE
+                LoadSection<DxfThumbnailTypeAttribute>(lines, DxfThumbnailCode.ThumbnailImageSection, () => _thumbnailLoaded = DxfSection.Thumbnails);
             #endregion
         }
 
@@ -99,5 +122,6 @@ namespace WeETL.Observables.Dxf
                 });
         }
 
+       
     }
 }

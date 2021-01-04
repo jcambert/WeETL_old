@@ -1,34 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using WeETL.Observables.Dxf.Tables;
+using WeETL.Utilities;
 
 namespace WeETL.Observables.Dxf.Collections
 {
+    public interface ITextStyles : ITableObject<TextStyle>,IDxfObject
+    {
+        IObservable<TextStyle> OnAdd { get; }
+
+    }
     /// <summary>
     /// Represents a collection of text styles.
     /// </summary>
     public sealed class TextStyles :
-        TableObjects<TextStyle>
+        TableObjects<TextStyle>, ITextStyles
     {
+        private ISubject<TextStyle> _onAdd = new Subject<TextStyle>();
         public override string CodeName => DxfTableCode.Style;
+
+        public IObservable<TextStyle> OnAdd => _onAdd.AsObservable();
         #region private variables
         private IDisposable _onNameChanged;
 
         #endregion
         #region constructor
 
-        internal TextStyles(DxfDocument document)
-            : this(document, null)
-        {
-        }
+        public TextStyles() : base() { }
 
-        internal TextStyles(DxfDocument document, string handle)
-            : base(document,  handle)
-        {
-        }
+
 
         #endregion
 
@@ -45,22 +50,21 @@ namespace WeETL.Observables.Dxf.Collections
         /// </returns>
         internal override TextStyle Add(TextStyle style, bool assignHandle)
         {
-            if (style == null)
-                throw new ArgumentNullException(nameof(style));
-
+            Check.NotNull(style, nameof(style));
             TextStyle add;
             if (this.list.TryGetValue(style.Name, out add))
                 return add;
 
-            if (assignHandle || string.IsNullOrEmpty(style.Handle))
-                this.GetOwner<DxfDocument>().NumHandles = style.AssignHandle(this.GetOwner<DxfDocument>().NumHandles);
+           // if (assignHandle || string.IsNullOrEmpty(style.Handle))
+           //     this.Document.NumHandles = style.AssignHandle(this.Document.NumHandles);
 
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
 
-            style.Owner = this.Handle;
-
-            _onNameChanged= style.OnNamedChanged.Subscribe(e => {
+            // style.Owner = this.Handle;
+            _onAdd.OnNext(style);
+            _onNameChanged = style.OnNamedChanged.Subscribe(e =>
+            {
                 if (this.Contains(e.NewValue))
                     throw new ArgumentException("There is already another text style with the same name.");
 
@@ -71,9 +75,9 @@ namespace WeETL.Observables.Dxf.Collections
                 this.references.Remove(e.Sender.Name);
                 this.references.Add(e.NewValue, refs);
             });
-            
 
-            this.GetOwner<DxfDocument>().AddedObjects.Add(style.Handle, style);
+
+            //this.GetOwner<DxfDocument>().AddedObjects.Add(style.Handle, style);
 
             return style;
         }
@@ -124,6 +128,6 @@ namespace WeETL.Observables.Dxf.Collections
 
         #endregion
 
-       
+
     }
 }

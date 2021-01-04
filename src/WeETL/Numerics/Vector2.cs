@@ -172,6 +172,10 @@ namespace WeETL.Numerics
             get { return this.isNormalized; }
         }
 
+        public bool IsPositiveX => X >= 0;
+        public bool IsNegativeX => !IsPositiveX;
+        public bool IsPositiveY => Y >= 0;
+        public bool IsNegativeY => !IsPositiveY;
         #endregion
 
         #region static methods
@@ -299,20 +303,26 @@ namespace WeETL.Numerics
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
         /// <returns>Angle in radians.</returns>
-        public static double AngleBetween(Vector2 u, Vector2 v)
+        public static double AngleBetween(Vector2 u, Vector2 v,bool oriented=false)
         {
+            var a1 = Angle(u);
+            var a2 = Angle(v);
+            bool _oriented = (a2 < a1 && oriented);/*||a1>Math.PI||a2>Math.PI*/;
+            var coef =_oriented ? -1 : 1;
+            var dot = DotProduct(u, v);
             double cos = DotProduct(u, v) / (u.Modulus() * v.Modulus());
-            if (cos >= 1.0)
+            if (cos > 1.0)
             {
                 return 0.0;
             }
 
-            if (cos <= -1.0)
+            if (cos < -1.0)
             {
                 return Math.PI;
             }
-
-            return Math.Acos(cos);
+            var res = _oriented ? (Math.PI * 2) - Math.Acos(cos) : Math.Acos(cos);
+            return res;
+             //return (u.IsNegativeY || v.IsNegativeY)?- Math.Acos(cos):Math.Acos(cos);
         }
 
         /// <summary>
@@ -441,6 +451,7 @@ namespace WeETL.Numerics
         {
             return new Vector2(u.X + v.X, u.Y + v.Y);
         }
+        
 
         /// <summary>
         /// Adds two vectors.

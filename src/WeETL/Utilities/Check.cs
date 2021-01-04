@@ -105,14 +105,22 @@ namespace WeETL.Utilities
 
             return value;
         }
+        [ContractAnnotation("value:null => halt")]
+        public static int NotNegative([CA.NotNull] int value, [InvokerParameterName][NotNull] string parameterName)
+        => value < 0 || string.IsNullOrEmpty( NotEmpty(parameterName,nameof(parameterName)))  ? throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName)):value;
+          
+        [ContractAnnotation("value:null => halt")]
+        public static double NotNegative([CA.NotNull] double value, [InvokerParameterName][NotNull] string parameterName)
+        => value < 0 || string.IsNullOrEmpty( NotEmpty(parameterName, nameof(parameterName))) ? throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName)):value;
 
         [Conditional("DEBUG")]
         public static void DebugAssert([CA.DoesNotReturnIf(false)] bool condition, string message)
-        {
-            if (!condition)
+            => _ = condition switch
             {
-                throw new Exception($"Check.DebugAssert failed: {message}");
-            }
-        }
+                true => true,
+                _=> throw new Exception($"Check.DebugAssert failed: {message}")
+            };
+
+      
     }
 }

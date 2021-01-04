@@ -1,0 +1,35 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#@ include file=".\..\Templates\Sections\Entity.tt"#>
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using WeETL.Observables.Dxf.Entities;
+
+namespace WeETL.Observables.Dxf.IO
+{
+    public partial class EntitySectionWriter{
+        protected override void InternalWrite()
+        {
+            foreach (EntityObject entity in Document.Entities)
+            {
+<#foreach(var code in codes.Where(c=>c.Key!="EntityObject").OrderBy(c=>c.Key)){#>
+                if(entity is <#=code.Key#>){
+                    <#=code.Key#> e=entity as <#=code.Key#>;
+                    TextWriter.Write(Utilities.<#=code.Key#>ToDxfFormat(e));
+<#if(code.Key!="EntityObject"){#>
+                    continue;
+<#}#>
+                }
+<#}#>
+            }
+        }
+    }
+}

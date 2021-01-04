@@ -3,9 +3,10 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Globalization" #>
 <#@ output extension=".cs" #>
 <#@ include file=".\..\Templates\Sections\Entity.tt"#>
-<#@ include file=".\..\Templates\Entities\Properties.tt"#>
+<#@ include file=".\..\Templates\Properties\Entities.tt"#>
 <#
 const string ABSTRACT_READER="AbstractReader";
 const string ENTITY_OBJECT_READER="EntitySectionEntityObjectReader";
@@ -22,7 +23,7 @@ var inheritFrom=code.Key=="EntityObject"?ABSTRACT_READER:ENTITY_OBJECT_READER;
 if(!code.Value.IsHeadClass){#>
 	[DxfEntityType(DxfEntityCode.<#=code.Key#>),DxfBlockType(DxfEntityCode.<#=code.Key#>)]
 <#}#>
-	internal partial class EntitySection<#=code.Key#>Reader:<#=inheritFrom#>{
+	internal <#if(code.Value.IsHeadClass){#>abstract<#}#> partial class EntitySection<#=code.Key#>Reader:<#=inheritFrom#>{
 
 		public EntitySection<#=code.Key#>Reader(IServiceProvider sp,ILogger<EntitySection<#=code.Key#>Reader> logger):base(sp,logger)
 		{
@@ -30,15 +31,21 @@ if(!code.Value.IsHeadClass){#>
 			DxfObject= new <#=code.Key#>() ;
 <#}#>
 		}
-
+<#if(code.Value.IsHeadClass){#>
+		protected virtual void InternalRead<TType>((int,string)code){
+		}
+<#}#>
 		public override void Read<TType>((int, string) code)
         {
 			base.Read<TType>(code);
+<#if(!code.Value.IsHeadClass){#>
+			InternalRead<TType>(code);
+<#}#>
 			Action<<#=code.Key#>,string> fn = code.Item1 switch
             {
 <#if(properties.ContainsKey(code.Key)){
 foreach(var p in properties[code.Key]){#>
-                <#=p.Code#> => Utilities.Read<#=p.Name.Replace(".","")#>,
+                <#=p.Code#> => Utilities.<#=code.Key#>Read<#=p.Name.Replace(".","")#>,
 <#}}#>
                 _ => null
             };

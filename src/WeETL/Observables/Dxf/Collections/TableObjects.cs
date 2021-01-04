@@ -5,18 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WeETL.Observables.Dxf.Tables;
+using WeETL.Utilities;
 
 namespace WeETL.Observables.Dxf.Collections
 {
-    class TableObjects
+    public interface ITableObject<T> : IEnumerable<T> where T : TableObject
     {
-    }/// <summary>
-     /// Represents a list of table objects
-     /// </summary>
-     /// <typeparam name="T"><see cref="TableObject">TableObject</see>.</typeparam>
+        T Add(T item);
+    }
+    /// <summary>
+    /// Represents a list of table objects
+    /// </summary>
+    /// <typeparam name="T"><see cref="TableObject">TableObject</see>.</typeparam>
     public abstract class TableObjects<T> :
         DxfObject,
-        IEnumerable<T> where T : TableObject
+        ITableObject<T> where T : TableObject
     {
         #region private fields
 
@@ -27,55 +30,46 @@ namespace WeETL.Observables.Dxf.Collections
 
         #region constructor
 
-        protected TableObjects(DxfDocument document, /*string codeName, */string handle)
+        protected TableObjects(/*DxfDocument document,*/ /*string codeName, *//*string handle*/)
             : base(/*codeName*/)
         {
-            
+
             this.list = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
             this.references = new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase);
-            this.Owner = document.Handle;
+            
 
-            if (string.IsNullOrEmpty(handle))
-            {
-                this.GetOwner<DxfDocument>().NumHandles = base.AssignHandle(this.GetOwner<DxfDocument>().NumHandles);
-            }
-            else
-            {
-                this.Handle = handle;
-            }
-
-            this.GetOwner<DxfDocument>().AddedObjects.Add(this.Handle, this);
+            
         }
 
         #endregion
 
         #region public properties
-
+   
         /// <summary>
         /// Gets a table object from the list by name.
         /// </summary>
         /// <param name="name">Table object name.</param>
         /// <returns>The table object with the specified name.</returns>
         /// <remarks>Table object names are case insensitive.</remarks>
-        public T this[string name]=> this.list.TryGetValue(name, out T item) ? item : null;
+        public T this[string name] => this.list.TryGetValue(name, out T item) ? item : null;
 
 
         /// <summary>
         /// Gets the table object list.
         /// </summary>
-        public ICollection<T> Items=> this.list.Values; 
-        
+        public ICollection<T> Items => this.list.Values;
+
 
         /// <summary>
         /// Gets the ObjectTable names.
         /// </summary>
-        public ICollection<string> Names=>  this.list.Keys; 
-        
+        public ICollection<string> Names => this.list.Keys;
+
 
         /// <summary>
         /// Gets the number of table objects.
         /// </summary>
-        public int Count=> this.list.Count; 
+        public int Count => this.list.Count;
 
 
         #endregion
@@ -85,8 +79,8 @@ namespace WeETL.Observables.Dxf.Collections
         /// <summary>
         /// Gets the <see cref="DxfObject">dxf objects</see> referenced by a T.
         /// </summary>
-        internal Dictionary<string, List<DxfObject>> References=> this.references; 
-        
+        internal Dictionary<string, List<DxfObject>> References => this.references;
+
 
         #endregion
 
@@ -135,16 +129,16 @@ namespace WeETL.Observables.Dxf.Collections
         /// </summary>
         /// <param name="name">Table object name.</param>
         /// <returns>True is a table object exists with the specified name, false otherwise.</returns>
-        public bool Contains(string name)=> this.list.ContainsKey(name);
-        
+        public bool Contains(string name) => this.list.ContainsKey(name);
+
 
         /// <summary>
         /// Checks if a table object already exists in the list. 
         /// </summary>
         /// <param name="item">Table object.</param>
         /// <returns>True is a table object exists, false otherwise.</returns>
-        public bool Contains(T item)=>this.list.ContainsValue(item);
-        
+        public bool Contains(T item) => this.list.ContainsValue(item);
+
 
         /// <summary>
         /// Gets the table object associated with the specified name.
@@ -215,10 +209,10 @@ namespace WeETL.Observables.Dxf.Collections
         /// Returns an enumerator that iterates through the table object collection.
         /// </summary>
         /// <returns>An enumerator for the table object collection.</returns>
-        public IEnumerator<T> GetEnumerator()=> this.list.Values.GetEnumerator();
-        
+        public IEnumerator<T> GetEnumerator() => this.list.Values.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()=> GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 
 

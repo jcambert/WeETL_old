@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WeETL.Observables.Dxf.Collections;
+using WeETL.Utilities;
 
 namespace WeETL.Observables.Dxf.Tables
 {
@@ -35,7 +36,7 @@ namespace WeETL.Observables.Dxf.Tables
         /// <summary>
         /// Default text style name.
         /// </summary>
-        public const string DefaultName = "Standard";
+        public const string DefaultName = "STANDARD";
 
         /// <summary>
         /// Gets the default text style.
@@ -78,24 +79,26 @@ namespace WeETL.Observables.Dxf.Tables
         /// <param name="font">Text style font file name with full or relative path.</param>
         /// <param name="checkName">Specifies if the style name has to be checked.</param>
         internal TextStyle(string name, string font, bool checkName)
-            : base(name,  checkName)
+            : base(name, checkName)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
-            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
+            Check.NotEmpty(name, nameof(name));
+            // if (string.IsNullOrEmpty(name))
+            //     throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
 
-            if (string.IsNullOrEmpty(font))
-                throw new ArgumentNullException(nameof(font));
+            //if (string.IsNullOrEmpty(font))
+            //    throw new ArgumentNullException(nameof(font));
+            Check.NotEmpty(font, nameof(font));
 
             if (!Path.GetExtension(font).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
                 !Path.GetExtension(font).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
 
+            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.file = font;
             this.bigFont = string.Empty;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
-            this.height = 0.0;
+            this.Height = 0.0;
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
@@ -171,8 +174,8 @@ namespace WeETL.Observables.Dxf.Tables
             get { return this.file; }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value));
+                Check.NotEmpty(value, nameof(value));
+                //if (string.IsNullOrEmpty(value))                    throw new ArgumentNullException(nameof(value));
 
                 if (!Path.GetExtension(value).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
                     !Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
@@ -198,6 +201,7 @@ namespace WeETL.Observables.Dxf.Tables
                     this.bigFont = string.Empty;
                 else
                 {
+
                     if (string.IsNullOrEmpty(this.file))
                         throw new NullReferenceException("The Big Font is only applicable for SHX Asian fonts.");
                     if (!Path.GetExtension(this.file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
@@ -223,8 +227,8 @@ namespace WeETL.Observables.Dxf.Tables
             get { return this.fontFamilyName; }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value));
+                Check.NotEmpty(value, nameof(value));
+                //if (string.IsNullOrEmpty(value))                    throw new ArgumentNullException(nameof(value));
                 this.file = string.Empty;
                 this.bigFont = string.Empty;
                 this.fontStyle = FontStyle.Regular;
@@ -255,13 +259,9 @@ namespace WeETL.Observables.Dxf.Tables
         /// <remarks>Fixed text height; 0 if not fixed.</remarks>
         public double Height
         {
-            get { return this.height; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle height must be equals or greater than zero.");
-                this.height = value;
-            }
+            get => height;
+            set => height = Check.NotNegative(value, nameof(value));
+
         }
 
         /// <summary>

@@ -5,10 +5,12 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Globalization" #>
 <#@ output extension=".cs" #>
-<#@ include file=".\..\Templates\GroupCodeValueType.tt"#>
-<#@ include file=".\..\Templates\Entities\Properties.tt"#>
+
+<#@ include file=".\..\Templates\Properties\Entities.tt"#>
+<#@ include file=".\..\Templates\Sections\Entity.tt"#>
 <#TextInfo ti = CultureInfo.CurrentCulture.TextInfo;#>
 using System;
+using System.Text;
 using WeETL.Observables.Dxf.Units;
 using WeETL.Observables.Dxf.Entities;
 using System.Globalization;
@@ -110,23 +112,36 @@ namespace WeETL.Observables.Dxf.IO
         }
 <#foreach(var entitiesProperty in properties){
 foreach(var p in entitiesProperty.Value){#>
-<#  var gpCode=groupCodeValueTypes.Where(g=>g.From<=p.Code && g.To>=p.Code).FirstOrDefault();
-    if(gpCode!=null){
-#>
-    internal static Action<<#=entitiesProperty.Key#>,string> Read<#=p.Name.Replace(".","")#>=(o,value)=>{
-    <#if(p.Name.Contains(".")){#>
-        var <#=p.Name.Split('.')[0].ToLower()#> = o.<#=p.Name.Split('.')[0]#>;
-        Read<#=ti.ToTitleCase(gpCode.Type)#>(value, value => <#=p.Name.Split('.')[0].ToLower()#>.<#=p.Name.Split('.')[1]#> = value);
-        o.<#=p.Name.Split('.')[0]#> = <#=p.Name.Split('.')[0].ToLower()#>;
-    <#}else{#>
-        Read<#=ti.ToTitleCase(gpCode.Type)#>(value,value=>o.<#=p.Name#>=value );
-    <#}#>
+    internal static Action<<#=entitiesProperty.Key#>,string> <#=entitiesProperty.Key#>Read<#=p.Name.Replace(".","")#>=(o,value)=>{
+        <#=p.GetReader("o")#>
     };
-    <# 
-    }else{
-    #>//CANNOT FIND GROUP CODE IN GroupCodeValueTypes <#=entitiesProperty.Key #>-<#=p.Code#><#
-    }
-#>
+
 <#}}#>
+    internal static void EntityObjectToDxfFormat(StringBuilder sb,EntityObject o)
+    {
+<#if(properties.ContainsKey("EntityObject")){
+foreach(var p in properties["EntityObject"]){#>
+        if(o!=null <#if(p.IsTypeNullable){#>&& o.<#=p.Name.Split('.')[0]#>!=null<#}#>){
+            sb.AppendLine("<#=p.Code#>");sb.AppendLine(<#=p.GetWriterCast("o")#>.ToString()); 
+        }
+<#}
+}#>
+    }
+<#foreach(var code in codes.Where(c=>c.Key!="EntityObject").OrderBy(c=>c.Key)){#>
+    internal static Func<<#=code.Key#>,string> <#=code.Key#>ToDxfFormat=o=>{
+        StringBuilder sb=new StringBuilder();
+        sb.AppendLine("0");sb.AppendLine("<#=code.Key.ToUpper()#>");
+        EntityObjectToDxfFormat(sb, o);
+<#if(properties.ContainsKey(code.Key)){
+foreach(var p in properties[code.Key]){#>
+        if(o!=null <#if(p.IsTypeNullable){#>&& o.<#=p.Name.Split('.')[0]#>!=null<#}#>){
+            sb.AppendLine("<#=p.Code#>");
+            sb.AppendLine(<#=p.GetWriterCast("o")#>);
+        }
+<#}
+}#>
+        return sb.ToString();
+    };
+<#}#>
     }
 }

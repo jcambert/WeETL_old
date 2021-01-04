@@ -3,7 +3,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#
-var groupCodeValueTypes=new List<GroupCodeValueType>(){
+List<GroupCodeValueType> groupCodeValueTypes=new List<GroupCodeValueType>(){
 new GroupCodeValueType(0,9,"string"),
 new GroupCodeValueType(10,39,"double"),
 new GroupCodeValueType(4,59,"double"),
