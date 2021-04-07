@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace WeETL.Observables.BySpeed
+namespace WeETL.Observables.GCode
 {
     [DebuggerDisplay("G28* Sub Prg {Command.L}:{Command.X}x{Command.Y}")]
-    public class G28 : GCommand, IGProgramm
+    public class G28 : GCommand, IGProgram
     {
 
 

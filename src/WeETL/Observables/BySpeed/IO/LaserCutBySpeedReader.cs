@@ -7,13 +7,14 @@ using WeETL.IO;
 using WeETL.Numerics;
 using WeETL.Observables.BySpeed.Entities;
 using WeETL.Observables.Dxf.Units;
+using WeETL.Observables.GCode;
 using WeETL.Utilities;
 
 namespace WeETL.Observables.BySpeed.IO
 {
     public interface ILaserCutBySpeedReader : IFileReader<ILaserDocument>
     {
-        Func<string, GCommandStructure> CommandParser { get; }
+        Func<string, GCommandLine> CommandParser { get; }
         bool RemovePrimings { get; set; }
         #region IFileReader
 
@@ -22,18 +23,18 @@ namespace WeETL.Observables.BySpeed.IO
     public class LaserCutBySpeedReader : ILaserCutBySpeedReader
     {
         ISubject<ILaserDocument> _onLoaded = new Subject<ILaserDocument>();
-        public LaserCutBySpeedReader(IGProgramm program, IFileReadLine lineReader, ILaserDocument document)
+        public LaserCutBySpeedReader(IGProgram program, IFileReadLine lineReader, ILaserDocument document)
         {
-            Check.NotNull(program, nameof(IGProgramm));
+            Check.NotNull(program, nameof(IGProgram));
             Check.NotNull(lineReader, nameof(IFileReadLine));
             Check.NotNull(document, nameof(document));
             this.Program = program;
             this.LineReader = lineReader;
             this.Document = document;
         }
-        public Func<string, GCommandStructure> CommandParser => Extensions.CommandParser;
+        public Func<string, GCommandLine> CommandParser => GCode.Extensions.CommandParser;
 
-        public IGProgramm Program { get; }
+        public IGProgram Program { get; }
         protected IFileReadLine LineReader { get; }
         public ILaserDocument Document { get; private set; }
 
@@ -60,17 +61,7 @@ namespace WeETL.Observables.BySpeed.IO
                 if (end.X <= start.X && end.Y >= start.Y) return center1.Y > center2.Y ? center2 : center1;
                 return Vector2.Zero;
             }
-            /*  var v1 = start - new Vector2(centers.Item1.Item1, centers.Item1.Item2);
-              var v2 = end- new Vector2(centers.Item1.Item1, centers.Item1.Item2);
-              var res1 = Vector2.AngleBetween(v1, v2, true);
-
-              var v3 = start - new Vector2(centers.Item2.Item1, centers.Item2.Item2);
-              var v4 = end - new Vector2(centers.Item2.Item1, centers.Item2.Item2);
-              var res2= Vector2.AngleBetween(v3,v4, true);
-              //if (dir == AngleDirection.CCW) return res1 > res2 ? new Vector2(centers.Item1.Item1, centers.Item1.Item2) : new Vector2(centers.Item2.Item1, centers.Item2.Item2);
-             // return res1 < res2 ? new Vector2(centers.Item1.Item1, centers.Item1.Item2) : new Vector2(centers.Item2.Item1, centers.Item2.Item2);
-             return dir==AngleDirection.CW? new Vector2(centers.Item1.Item1, centers.Item1.Item2) : new Vector2(centers.Item2.Item1, centers.Item2.Item2);
-            */
+            
         }
         public virtual void Load(string filename)
         {
@@ -87,21 +78,14 @@ namespace WeETL.Observables.BySpeed.IO
             LineReader
                 .Output
                 .Select(CommandParser)
-                .Where(cmdLine => cmdLine.Line != null/* && cmdLine.Line <= 1010*/)
+                .Where(cmdLine => cmdLine.N != null)
                 .Subscribe((line) =>
                 {
-                    /* if (line.M != null && line.M.Value == 4)
-                         _isInPriming = true;
-                     if (line.M != null && line.M.Value == 5)
-                         _isInPriming = false;
-                     */
-                    //Console.WriteLine(line.Line+" "+ line.Comment);
 
                     x = line.X == null ? x : line.X.Value;
                     y = line.Y == null ? y : line.Y.Value;
 
                     code = line.Code == null ? code : line.Code.Value;
-                    // if (line.Line >= 1011) Debugger.Break();
                     if (line.M != null && (line.M.Contains(3) || line.M.Contains(4)))
                     {
                         addEnable = true;
@@ -136,7 +120,6 @@ namespace WeETL.Observables.BySpeed.IO
                             break;
                         case 2:
                             ++counter;
-                            //if (counter >= 29 && counter <= 31) Debugger.Break();
                             if (currentPiece > 0)
                             {
                                 if (RemovePrimings && _isInPriming)
@@ -158,7 +141,7 @@ namespace WeETL.Observables.BySpeed.IO
                                         r = line.R == null ? r.Value : line.R.Value;
                                         var centers = CalculateCenter(start, to, r.Value);
 
-                                        center = GetGoodCenter(start, to, centers, AngleDirection.CW);// new Vector2(_center.Item1, _center.Item2);
+                                        center = GetGoodCenter(start, to, centers, AngleDirection.CW);
                                         start = Document.Pieces[currentPiece].AddArc("G2", start, to, center, Dxf.Units.AngleDirection.CW);
                                         i = j = null;
 
@@ -200,7 +183,7 @@ namespace WeETL.Observables.BySpeed.IO
                                         r = line.R == null ? r.Value : line.R.Value;
                                         var centers = CalculateCenter(start, to, r.Value);
 
-                                        center = GetGoodCenter(start, to, centers, AngleDirection.CCW); //new Vector2(_center.Item1, _center.Item2);
+                                        center = GetGoodCenter(start, to, centers, AngleDirection.CCW); 
                                         start = Document.Pieces[currentPiece].AddArc("G3", start, to, center, Dxf.Units.AngleDirection.CCW);
                                     }
                                     else

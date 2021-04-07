@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 
-namespace WeETL.Observables.BySpeed
+namespace WeETL.Observables.GCode
 {
-    public interface IGProgramm
+    public interface IGProgram
     {
         List<GCommand> Commands { get; }
     }
-    public class GProgram : IGProgramm
+    public class GProgram : IGProgram
     {
         public List<GCommand> Commands { get; } = new List<GCommand>();
     }

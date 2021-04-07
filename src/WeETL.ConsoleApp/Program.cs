@@ -28,7 +28,6 @@ namespace WeETL.ConsoleApp
 
     class Program
     {
-        public delegate bool GTILicenseInitPtr();
 
 #pragma warning disable CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
         static async Task Main(string[] args)
@@ -68,9 +67,9 @@ namespace WeETL.ConsoleApp
             ETLContext ctx = new ETLContext();
             ctx.ConfigureService(cfg =>
             {
-                cfg.UseCommonUtilities();
-                cfg.UseGCommands();
-                cfg.UseDxf();
+                cfg.UseCommonUtilities()
+                .UseGCommands()
+                .UseDxf();
             });
             var dxfWriter = ctx.GetService<IDxfWriter>();
             dxfWriter.OnWrited.Subscribe(document =>
@@ -86,7 +85,8 @@ namespace WeETL.ConsoleApp
             prgReader.RemovePrimings = removePriming;
             prgReader.OnLoaded.Subscribe(doc =>
             {
-                //var orientation = dxfDocument.Header.Angdir;
+                doc.MapToDxf(dxfDocument);
+                
                 int counter = 0;
                 if (drawFormat)
                 {
@@ -95,11 +95,11 @@ namespace WeETL.ConsoleApp
                     dxfDocument.Entities.Add(new Line(new Vector2(doc.Format.Length, doc.Format.Width), new Vector2(0, doc.Format.Width)) { LayerName = "format" });
                     dxfDocument.Entities.Add(new Line(new Vector2(0, doc.Format.Width), Vector2.Zero) { LayerName = "format" });
                 }
-                doc.Origins.Keys/*.Skip(4).Take(1)*/.ToList().ForEach(originKey =>
+                doc.Origins.Keys.ToList().ForEach(originKey =>
                 {
                     var origins = doc.Origins[originKey];
                     var piece = doc.Pieces[originKey];
-                    origins/*.Take(1)*/.ToList().ForEach(origin =>
+                    origins.ToList().ForEach(origin =>
                     {
                         var cos = Math.Cos(origin.Item3);
                         var sin = Math.Sin(origin.Item3);
