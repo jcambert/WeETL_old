@@ -23,6 +23,7 @@ namespace WeETL.Observables.BySpeed.IO
     public class LaserCutBySpeedReader : ILaserCutBySpeedReader
     {
         ISubject<ILaserDocument> _onLoaded = new Subject<ILaserDocument>();
+        ISubject<Exception> _onError = new Subject<Exception>();
         public LaserCutBySpeedReader(IGProgram program, IFileReadLine lineReader, ILaserDocument document)
         {
             Check.NotNull(program, nameof(IGProgram));
@@ -40,6 +41,9 @@ namespace WeETL.Observables.BySpeed.IO
 
         public IObservable<ILaserDocument> OnLoaded => _onLoaded.AsObservable();
         public bool RemovePrimings { get; set; } = false;
+
+        public IObservable<Exception> OnError => _onError.AsObservable();
+
         private Vector2 GetGoodCenter(Vector2 start, Vector2 end, ((double, double), (double, double)) centers, AngleDirection dir)
         {
             Vector2 center1 = new Vector2(centers.Item1.Item1, centers.Item1.Item2);

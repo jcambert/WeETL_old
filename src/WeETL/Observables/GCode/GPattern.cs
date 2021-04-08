@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using WeETL.Utilities;
 
 namespace WeETL.Observables.GCode
 {
@@ -199,9 +200,9 @@ namespace WeETL.Observables.GCode
         {
             object _value = PatternType switch
             {
-                GPatternType.INTEGER => Extensions.TrySetIntValue(groups[Group]?.Value),
+                GPatternType.INTEGER => groups[Group]?.Value.TrySetIntValue(),
                 GPatternType.MULTI_INTEGER => Extensions.TrySetIntMultipleValue(groups[Group]),
-                GPatternType.DECIMAL => Extensions.TrySetDoubleValue(groups[Group]?.Value),
+                GPatternType.DECIMAL => groups[Group]?.Value.TrySetDoubleValue(),
                 GPatternType.STRING => Extensions.TrySetComment(groups[Group]),
                 _ => null
             };

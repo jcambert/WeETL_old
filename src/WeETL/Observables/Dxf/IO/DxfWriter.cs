@@ -2,23 +2,20 @@
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using WeETL.IO;
 
 namespace WeETL.Observables.Dxf.IO
 {
-    public interface IDxfWriter
+    public interface IDxfWriter: IFileWriter<IDxfDocument>
     {
-        void Write(IDxfDocument document, string filename, DxfSection DxfSection = DxfSection.All);
-
-
-        IObservable<IDxfDocument> OnWrited { get; }
+  
     }
 
-    public class DxfWriter : IDxfWriter
+    public class DxfWriter : FileWriter<IDxfDocument>, IDxfWriter
     {
-        private ISubject<IDxfDocument> _onWrited = new Subject<IDxfDocument>();
-        public IObservable<IDxfDocument> OnWrited => _onWrited.AsObservable();
 
         public IWriterFactory WriterFactory { get; }
+
 
         private DxfSection SectionsToWrite = DxfSection.All;
 
@@ -26,27 +23,19 @@ namespace WeETL.Observables.Dxf.IO
         {
             WriterFactory = writerFactory;
         }
-        public void Write(IDxfDocument document, string filename, DxfSection section = DxfSection.All)
+
+
+        protected override void InternalWrite(TextWriter writer, IDxfDocument document, string filename)
         {
-            
-            SectionsToWrite = section;
-            using (TextWriter tw = new StreamWriter(filename, false))
-            {
-                var writer = WriterFactory.CreateWriterSection("ENTITIES", document,tw);
-                writer.Write();
+           //TODO WRITE FOR SECTION, NOT ONLY ENTITIES
+           
+                var _writer = WriterFactory.CreateWriterSection("ENTITIES", document, writer);
+                _writer.Write();
 
-               /* tw.WriteStartSection();
-                tw.WriteSection("ENTITIES");
-                foreach (var entity in document.Entities)
-                {
-                    entity.WriteTo(tw);
-                }
-                tw.WriteEndSection();*/
-                tw.WriteEOF();
+                writer.WriteEOF();
 
-            }
             
-            _onWrited.OnNext(document);
+            
         }
     }
 

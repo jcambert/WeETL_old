@@ -274,7 +274,7 @@ namespace WeETL.Observables.Dxf
             {254, new byte[] {204, 204, 204}},
             {255, new byte[] {255, 255, 255}}
         };
-        private static byte ControlIndex(byte index)=>index<1?1:index>255?255:index;
+        private static byte ControlIndex(byte index)=>(byte)(index<1?1:index>255?255:index);
         internal static AciColor FromIndex(byte index) => new AciColor( indexRgb[ControlIndex( index)][0], indexRgb[ControlIndex(index)][1], indexRgb[ControlIndex(index)][2]);
         #endregion
 

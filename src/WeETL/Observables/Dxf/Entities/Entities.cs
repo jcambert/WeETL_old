@@ -9,7 +9,7 @@ namespace WeETL.Observables.Dxf.Entities
 {
 	public abstract partial class EntityObject{
         #region properties
-        public string Handle{get;set;}
+        //public string Handle{get;set;}
         public string LayerName{get;set;}
         public AciColor Color{get;set;}
         public ModelSpace ModelSpace{get;set;}

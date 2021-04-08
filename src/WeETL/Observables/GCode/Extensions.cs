@@ -7,14 +7,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WeETL.DependencyInjection;
+using WeETL.Utilities;
 
 namespace WeETL.Observables.GCode
 {
     public static class Extensions
     {
-        internal static double? TrySetDoubleValue(this string from) => double.TryParse(from, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double res) ? res : null;
-
-        internal static int? TrySetIntValue(this string from) => Int32.TryParse(from, out int res) ? res : null;
+        
 
         internal static int[] TrySetIntMultipleValue(this Group col)
         {
@@ -22,7 +21,7 @@ namespace WeETL.Observables.GCode
             int[] res = new int[col.Captures.Count];
             for (int i = 0; i < col.Captures.Count; i++)
             {
-                int v = TrySetIntValue(col.Captures[i].Value) ?? 0;
+                int v = col.Captures[i].Value.TrySetIntValue() ?? 0;
                 res[i] = v;
 
             }

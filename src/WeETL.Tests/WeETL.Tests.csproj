@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="0128">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="15563001.lcc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
